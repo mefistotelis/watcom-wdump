@@ -324,15 +324,15 @@ static void *dmp_fixed_seg_ent_pnts( unsigned_16 num_ent_pnts,
 /**********************************************************************/
 {
     struct fixed_record             *fix_ent;
-    struct int_entry_pnt            *new;
+    struct int_entry_pnt            *new_pnt;
 
     fix_ent = ent_pnts;
     for( ; num_ent_pnts != 0; num_ent_pnts-- ) {
-        new = new_ent_pnt();
-        new->ordinal = ent_pnt_index++;
-        new->seg_num = seg_num;
-        new->offset = fix_ent->entry;
-        new->ent_flag = fix_ent->info;
+        new_pnt = new_ent_pnt();
+        new_pnt->ordinal = ent_pnt_index++;
+        new_pnt->seg_num = seg_num;
+        new_pnt->offset = fix_ent->entry;
+        new_pnt->ent_flag = fix_ent->info;
         ++fix_ent;
     }
     return( fix_ent );
@@ -343,15 +343,15 @@ static void *dmp_movable_seg_ent_pnts( unsigned_16 num_ent_pnts,
 /*****************************************************************/
 {
     struct movable_record           *mov_ent;
-    struct int_entry_pnt            *new;
+    struct int_entry_pnt            *new_pnt;
 
     mov_ent = ent_pnts;
     for( ; num_ent_pnts != 0; num_ent_pnts-- ) {
-        new = new_ent_pnt();
-        new->ordinal = ent_pnt_index++;
-        new->ent_flag = mov_ent->info;
-        new->seg_num = mov_ent->entrynum;
-        new->offset = mov_ent->entry;
+        new_pnt = new_ent_pnt();
+        new_pnt->ordinal = ent_pnt_index++;
+        new_pnt->ent_flag = mov_ent->info;
+        new_pnt->seg_num = mov_ent->entrynum;
+        new_pnt->offset = mov_ent->entry;
         ++mov_ent;
     }
     return( mov_ent );
