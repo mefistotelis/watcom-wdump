@@ -47,8 +47,11 @@
 #include "lib.h"
 
 #define PERLINE                 16
+// Max length of a number converted to string
 #define NUMLINE                 24
+// Length used to justify text in banners
 #define LINE_LEN                78
+// Size used to create small (one-line) text buffers
 #define BUFFERSIZE              157
 #define SLEN                    30
 #define TRUE                    1
@@ -58,6 +61,7 @@
 #define MAX_SECTION_DATA        4096
 #define SELECTOR_FIX            0x02
 #define table( x )              { x, #x }
+// Size of the buffer used for debug info reading
 #define MAX_BUFF                0xff00
 #define bool                    char
 
