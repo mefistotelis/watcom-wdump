@@ -239,14 +239,14 @@ uint_8 *DecodeULEB128( const uint_8 *input, uint_32 *value )
 {
     uint_32     result;
     uint        shift;
-    uint_8      byte;
+    uint_8      ibyte;
 
     result = 0;
     shift = 0;
     for( ;; ) {
-        byte = *input++;
-        result |= ( byte & 0x7f ) << shift;
-        if( ( byte & 0x80 ) == 0 ) break;
+        ibyte = *input++;
+        result |= ( ibyte & 0x7f ) << shift;
+        if( ( ibyte & 0x80 ) == 0 ) break;
         shift += 7;
     }
     *value = result;
@@ -258,17 +258,17 @@ uint_8 *DecodeLEB128( const uint_8 *input, int_32 *value )
 {
     int_32      result;
     uint        shift;
-    uint_8      byte;
+    uint_8      ibyte;
 
     result = 0;
     shift = 0;
     for( ;; ) {
-        byte = *input++;
-        result |= ( byte & 0x7f ) << shift;
+        ibyte = *input++;
+        result |= ( ibyte & 0x7f ) << shift;
         shift += 7;
-        if( ( byte & 0x80 ) == 0 ) break;
+        if( ( ibyte & 0x80 ) == 0 ) break;
     }
-    if( ( shift < 32 ) && ( byte & 0x40 ) ) {
+    if( ( shift < 32 ) && ( ibyte & 0x40 ) ) {
         result |= - ( 1 << shift );
     }
     *value = result;
