@@ -219,7 +219,7 @@ static void dmp_fixup( unsigned_16 size, bool float_pt )
 static void dmp_banner( void )
 /****************************/
 {
-    char        buff[80];
+    char        buff[BUFFERSIZE];
     char        sec;
 
     strcpy( buff, "Data Table " );

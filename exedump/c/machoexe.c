@@ -322,7 +322,7 @@ static void dmp_sec_type( unsigned_32 type )
 static void dmp_prog_flgs( unsigned_32 flags )
 /********************************************/
 {
-    char    name[128];
+    char    name[BUFFERSIZE];
 
     name[0] = 0;
     if( flags & PF_X ) {
@@ -348,7 +348,7 @@ static void dmp_prog_flgs( unsigned_32 flags )
 static void dmp_sec_flgs( unsigned_32 flags )
 /*******************************************/
 {
-    char    name[128];
+    char    name[BUFFERSIZE];
 
     name[0] = 0;
     if( flags & SHF_WRITE ) {

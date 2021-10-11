@@ -57,7 +57,7 @@ static  char    *sdh_msg[] = {
 static void print_info_title( char *title )
 /*****************************************/
 {
-    char        buff[80];
+    char        buff[BUFFERSIZE];
     char        sec;
 
     strcpy( buff, title );
