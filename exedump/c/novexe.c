@@ -317,7 +317,7 @@ bool Dmp_nlm_head( void )
     nlm_header_3    nlm_head3;
     nlm_header_4    nlm_head4;
     bool            extend;
-    char            nlm_name[256];
+    char            nlm_name[MAX_EXPORT_NAME_LEN];
 
     Wlseek( 0 );
     Wread( &Nlm_head, sizeof( Nlm_head.signature ) );

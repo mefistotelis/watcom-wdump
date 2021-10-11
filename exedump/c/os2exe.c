@@ -366,7 +366,7 @@ static void dmp_obj_page( object_record obj )
 static void dmp_obj_flags( unsigned_32 flags )
 /********************************************/
 {
-    char    name[256];
+    char    name[MAX_EXPORT_NAME_LEN];
 
     name[0] = 0;
     if( flags & OBJ_READABLE ) {

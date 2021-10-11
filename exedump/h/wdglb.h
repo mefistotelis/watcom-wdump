@@ -59,6 +59,8 @@
 #define STDOUT                  1
 #define BSIZE                   512
 #define MAX_SECTION_DATA        4096
+// Max size of function names in import/export/debug section
+#define MAX_EXPORT_NAME_LEN     256
 #define SELECTOR_FIX            0x02
 #define table( x )              { x, #x }
 // Size of the buffer used for debug info reading

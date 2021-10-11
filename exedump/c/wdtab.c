@@ -63,7 +63,7 @@ static unsigned_8 read_res_nonres_nam( char *name, unsigned_16 *ordinal )
 static unsigned_8 dmp_res_nonres_nam( void )
 /******************************************/
 {
-    char                    resident[256];
+    char                    resident[MAX_EXPORT_NAME_LEN];
     unsigned_16             entry_index;
     unsigned_8              len;
 
@@ -509,8 +509,8 @@ void Dmp_le_lx_tbls( void )
 static void dump_exports( void )
 /******************************/
 {
-    unsigned_8      string_len;
-    char            name[256];
+    unsigned_16     string_len;
+    char            name[MAX_EXPORT_NAME_LEN];
     unsigned_16     ordinal;
 
     while( (string_len = read_res_nonres_nam( name, &ordinal )) != 0 ) {
@@ -532,7 +532,7 @@ bool Dmp_os2_exports( void )
 /**************************/
 {
     unsigned_32     res_nam_tab;
-    char            name[256];
+    char            name[MAX_EXPORT_NAME_LEN];
     unsigned_16     ordinal;
 
     /* Check executable format; handle stubless modules */

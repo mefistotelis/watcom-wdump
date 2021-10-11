@@ -794,13 +794,12 @@ static void dump_module_info( section_dbg_header *sdh )
     mod_info    *mi;
     unsigned_32 total_bytes;
     long        cpos;
-    char        name[256];
+    char        name[MAX_EXPORT_NAME_LEN];
     unsigned_16 index;
     mod_info    *tmi;
 
     total_bytes = sdh->gbl_offset - sdh->mod_offset;
     print_info_title( "Module" );
-
     bytes_read = 0;
     mi = (mod_info *) Wbuff;
     tmi = alloca( sizeof( mod_info ) + 255 );
@@ -863,7 +862,7 @@ static void dump_global_info( section_dbg_header *sdh )
     unsigned_32 bytes_read;
     v3_gbl_info *gi;
     long        cpos;
-    char        name[256];
+    char        name[MAX_EXPORT_NAME_LEN];
 
     total_bytes = sdh->addr_offset - sdh->gbl_offset;
     print_info_title( "Global" );
