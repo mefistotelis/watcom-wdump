@@ -18,6 +18,7 @@ BIN  = wdump.exe
 CXXFLAGS = $(CXXINCS)  
 CFLAGS = -c $(INCS)  
 RM = rm -f
+ECHO = @echo
 
 .PHONY: all all-before all-after clean clean-custom
 
