@@ -419,6 +419,17 @@ static void dmp_an_ord( struct int_entry_pnt *find )
     }
 }
 
+struct int_entry_pnt *get_entry_point_by_ordinal( unsigned_16 ord )
+{
+    struct int_entry_pnt    *find;
+    for( find = Entry_pnts; find != NULL; find = find->next ) {
+        if( find->ordinal == ord ) {
+            return find;
+        }
+    }
+    return NULL;
+}
+
 /*
  * Dumps an entry point recognized by given ordinal.
  */
@@ -426,15 +437,13 @@ void Dmp_ordinal( unsigned_16 ord )
 /*********************************/
 {
     struct int_entry_pnt    *find;
-
-    for( find = Entry_pnts; find != NULL; find = find->next ) {
-        if( find->ordinal == ord ) {
-            dmp_an_ord( find );
-            return;
-        }
+    find = get_entry_point_by_ordinal( ord );
+    if ( find == NULL ) {
+        Wdputs( " unknown ordinal " );
+        Puthex( ord, 4 );
+        return;
     }
-    Wdputs( " unknown ordinal " );
-    Puthex( ord, 4 );
+    dmp_an_ord( find );
 }
 
 /*
