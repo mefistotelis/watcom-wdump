@@ -118,17 +118,20 @@ static void dmp_exp_ord_name( unsigned_32 nam_off, unsigned_32 ord_off,
     Wdputslc( "\n" );
     Wdputslc( "  ordinal     name ptr        name\n" );
     Wdputslc( "  =======     ========        ====\n" );
+    name = Wmalloc( BUFFERSIZE );
     for( i = 0; i < num_ptr; i++ ) {
         Putdecl( ord_addr[i] + base, 6 );
         Wdputs( "        " );
         Puthex( nam_addr[i], 8 );
         Wdputs( "        " );
         Wlseek( nam_addr[i] - Pe_head.table[ PE_TBL_EXPORT ].rva + Exp_off );
-        name = Wmalloc( BUFFERSIZE );
         Wread( name, BUFFERSIZE );
         Wdputs( name );
         Wdputslc( "\n" );
     }
+    free(name);
+    free(ord_addr);
+    free(nam_addr);
 }
 
 /*
@@ -231,9 +234,9 @@ static void dmp_ord_name( unsigned_32 nam_off, unsigned_32 ord_off,
     ord_addr = Wmalloc( addr_size );
     Wread( ord_addr, addr_size );
     Wdputslc( "\n" );
+    name = Wmalloc( BUFFERSIZE );
     for( i = 0; i < num_ptr; i++ ) {
         Wlseek( nam_addr[i] - Pe_head.table[ PE_TBL_EXPORT ].rva + Exp_off );
-        name = Wmalloc( BUFFERSIZE );
         Wread( name, BUFFERSIZE );
         Wdputs( name );
         Wdputc( '.' );
@@ -243,6 +246,9 @@ static void dmp_ord_name( unsigned_32 nam_off, unsigned_32 ord_off,
         Putdec( ord_addr[i] + base );
         Wdputslc( "\n" );
     }
+    free(name);
+    free(ord_addr);
+    free(nam_addr);
 }
 
 /*
