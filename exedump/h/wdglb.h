@@ -149,6 +149,15 @@ struct int_entry_pnt {
         unsigned_16             offset;
 };
 
+struct int_export_itm {
+        struct int_export_itm * next;
+        unsigned_32             ordinal;
+        unsigned_32             nam_offs;
+        unsigned_32             body_rva;
+        unsigned_32             seg_num;
+        unsigned_32             offset;
+};
+
 struct relocation_item {
         unsigned_8      addr_type;          /* see below                     */
         unsigned_8      reloc_type;         /* see below                     */

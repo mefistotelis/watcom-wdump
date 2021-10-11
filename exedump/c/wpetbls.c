@@ -64,6 +64,40 @@ static  char    *pe_import_msg[] = {
 
 extern char  Fname[ _MAX_FNAME ];
 
+struct  int_export_itm     *Export_itms = NULL;
+
+/*
+ * Allocate a new int_export_itm structure and add it to Export_itms list.
+ */
+struct int_export_itm *new_export_itm( void )
+/**********************************************/
+{
+    struct int_export_itm    *new_itm;
+
+    new_itm = Wmalloc( sizeof( struct int_export_itm ) );
+    new_itm->next = Export_itms;
+    Export_itms = new_itm;
+    return( new_itm );
+}
+
+/*
+ * Free the whole Export_itms structure.
+ */
+void free_export_itms( void )
+/**********************************************/
+{
+    struct int_export_itm    *cr_itm;
+    struct int_export_itm    *nx_itm;
+
+    cr_itm = Export_itms;
+    Export_itms = NULL;
+    while (cr_itm != NULL) {
+        nx_itm = cr_itm->next;
+        free ( cr_itm );
+        cr_itm = nx_itm;
+    }
+}
+
 /*
  * Dump the Export address Table.
  */
