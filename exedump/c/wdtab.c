@@ -358,9 +358,10 @@ static void *dmp_movable_seg_ent_pnts( unsigned_16 num_ent_pnts,
 }
 
 /*
- * Parse the Entry Table
+ * Parses the Entry Table of NE file. Is compatible ONLY with NE files.
+ * Stores the data in Entry_pnts structure.
  */
-static void prs_ent_tab( unsigned_32 ent_tab, unsigned_16 ent_tab_len )
+static void parse_ne_entry_table( unsigned_32 ent_tab, unsigned_16 ent_tab_len )
 /*********************************************************************/
 {
     struct bundle_prefix    *ent_bund;
@@ -462,7 +463,7 @@ static void dmp_entry_tab( void )
 void Dmp_ne_tbls( void )
 /**********************/
 {
-    prs_ent_tab( New_exe_off + Os2_head.entry_off, Os2_head.entry_size );
+    parse_ne_entry_table( New_exe_off + Os2_head.entry_off, Os2_head.entry_size );
     Banner( "Resident Names Table" );
     dmp_res_nonres_tab( New_exe_off + Os2_head.resident_off );
     dmp_mod_ref_tab( New_exe_off + Os2_head.module_off, Os2_head.modrefs );
