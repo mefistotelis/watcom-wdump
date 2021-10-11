@@ -52,7 +52,7 @@ static  char    *sdh_msg[] = {
 };
 
 /*
- * print_info_title - print out a title for an info section
+ * print_info_title - Print out a title for an info section.
  */
 static void print_info_title( char *title )
 /*****************************************/
@@ -69,7 +69,8 @@ static void print_info_title( char *title )
 } /* print_info_title */
 
 /*
- * get_len_prefix_string - make a length-prefixed string a 0 terminated string
+ * get_len_prefix_string - Make a length-prefixed string a 0 terminated string.
+ * Converts Pascal-style string into C-style one.
  */
 static void get_len_prefix_string( char *res, char *str )
 /*******************************************************/
@@ -853,7 +854,7 @@ static void dump_module_info( section_dbg_header *sdh )
 } /* dump_module_info */
 
 /*
- * dump_global_info - dump out global info
+ * dump_global_info - Dump out global info block of debugging information.
  */
 static void dump_global_info( section_dbg_header *sdh )
 /*****************************************************/

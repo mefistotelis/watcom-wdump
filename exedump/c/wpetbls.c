@@ -37,7 +37,6 @@
 #include "wdglb.h"
 #include "wdfunc.h"
 
-
 static  char    *pe_export_msg[] = {
     "4          export flags                      = ",
     "4          time/date stamp                   = ",

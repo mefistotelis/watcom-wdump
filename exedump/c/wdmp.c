@@ -378,7 +378,6 @@ static int parse_options( int argc, char * const *argv )
  * The Increasingly More Misnamed Segmented .EXE File Header Dump Utility
  * for WLINK and WD (nee WVIDEO)
  */
-
 int main( int argc, char * const *argv )
 /**************************************/
 {

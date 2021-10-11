@@ -172,7 +172,7 @@ static void dmp_import_tab( unsigned_32 imp_nam_tab )
     for( ;; ) {
         resident = alloca( string_len );
         if( resident == NULL ) {
-            Wdputslc( "Error! Dynamic memory exausted.\n" );
+            Wdputslc( "Error! Dynamic memory exhausted.\n" );
             longjmp( Se_env, 1 );
         }
         Wread( resident, string_len );
@@ -419,7 +419,7 @@ static void dmp_an_ord( struct int_entry_pnt *find )
 }
 
 /*
- * dump an ordinal entry point
+ * Dumps an entry point recognized by given ordinal.
  */
 void Dmp_ordinal( unsigned_16 ord )
 /*********************************/
@@ -437,7 +437,8 @@ void Dmp_ordinal( unsigned_16 ord )
 }
 
 /*
- * dump the entry point table
+ * Dumps the entry point table of NE/LE/LX file.
+ * Requires parse_ne_entry_table() to be called before.
  */
 static void dmp_entry_tab( void )
 /*******************************/

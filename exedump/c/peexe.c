@@ -299,7 +299,6 @@ static void DumpPEObjFlags( unsigned_32 flags )
     DumpFlags( flags, PE_OBJ_ALIGN_MASK, PEObjFlags, buf );
 }
 
-
 /*
  * Dump the Object Table.
  */
