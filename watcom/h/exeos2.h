@@ -32,7 +32,7 @@
 
 #ifndef _EXEOS2_H
 
-#pragma pack(push, 1)
+#include "pushpck1.h"
 
 /* OS/2 EXE file header and various tables */
 /* ======================================= */
@@ -141,10 +141,10 @@ typedef struct os2_exe_header {
 #define WIN_GANGLOAD_PRESENT    0x08
 
 typedef struct segment_record {
-    unsigned_16         address;        /* segment position within file     */
-    unsigned_16         size;           /* segment length in bytes          */
-    unsigned_16         info;           /* various flags (see below)        */
-    unsigned_16         min;            /* minimum allocation (size in mem) */
+    unsigned_16         address;        /* segment position within file           */
+    unsigned_16         size;           /* segment length in bytes (size in file) */
+    unsigned_16         info;           /* various flags (see below)              */
+    unsigned_16         min;            /* minimum allocation (size in mem)       */
 } segment_record;
 
 /******************************************************************************
@@ -260,7 +260,7 @@ typedef struct resource_record {
 #define REL_IMPORTED_NAME       0x0002
 #define REL_ADDITIVE            0x0004
 
-#pragma pack(pop)
+#include "poppck.h"
 
 #define _EXEOS2_H
 #endif

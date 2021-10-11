@@ -44,7 +44,7 @@
 #define _BETA_                  _BANEXTRA
 #endif
 
-#define CURR_YEAR       "2004"
+#define CURR_YEAR       "2008"
 
 #define banner1p1(p)  p
 #define banner1p2(v)  "Version " v
@@ -65,6 +65,10 @@
 #define banner1ps(p,v)  "Powersoft " banner1p1(p) " " banner1p2(v)
 #define banner2ps       banner2a()
 #define banner3ps       "All rights reserved.  Powersoft is a trademark of Sybase, Inc."
+
+/* Used by setupgui/c/guiinit.c */
+#define banner4gui()    "Copyright © 2002-%s Open Watcom Contributors. All Rights Reserved."
+#define banner2agui() "Portions Copyright © 1984-2002 Sybase, Inc. All Rights Reserved."
 
 // the following macros define the delimeters used bythe resource
 // compiler when concatenating strings
@@ -87,6 +91,10 @@
     #define BAN_VER_STR "1.6" _BETA_
 #elif _BANVER == 1270
     #define BAN_VER_STR "1.7" _BETA_
+#elif _BANVER == 1280
+    #define BAN_VER_STR "1.8" _BETA_
+#elif _BANVER == 1290
+    #define BAN_VER_STR "1.9" _BETA_
 #else
     #error **** Specified Banner version not supported ****
     #define BAN_VER_STR "12.0" _BETA_

@@ -66,6 +66,12 @@ extern bool Dmp_elf_header( unsigned long );
 extern bool Dmp_lib_head( void );
 
 /*
+ * machoexe.c
+ */
+extern bool Dmp_macho_header( unsigned long );
+extern bool Dmp_macho_head( void );
+
+/*
  * wdwarf.c
  */
 extern bool Dmp_dwarf( void );
@@ -168,6 +174,7 @@ extern bool Dmp_d16m_head( void );
 /*
  * wdio.c
  */
+extern bool Weof( void );
 extern void Wread( void *, unsigned_32 );
 extern void Wlseek( signed_32 );
 extern long WFileSize( void );
