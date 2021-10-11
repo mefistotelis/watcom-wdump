@@ -39,9 +39,11 @@ extern bool Dmp_386_head( void );
  * peexe.c
  */
 extern bool Dmp_pe_head( void );
-extern void dmp_objects( unsigned );
+extern void dmp_objects( void );
 extern void DumpCoffHdrFlags( unsigned_16 );
 extern bool Dmp_pe_tab( void );
+bool parse_pe_sections_table( unsigned_32 offset, unsigned_32 num_objects );
+void free_sections_table( void );
 
 /*
  * novexe.c

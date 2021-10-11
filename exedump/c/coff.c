@@ -200,8 +200,11 @@ bool Dmp_coff_head( void )
     Dump_header( (char *)&header, coff_hdr_msg );
     DumpCoffHdrFlags( header.flags );
     load_string_table( &header );
-    Wlseek( Coff_off + sizeof(coff_file_header) + header.opt_hdr_size );
-    dmp_objects( header.num_sections );
+
+    parse_pe_sections_table( Coff_off + sizeof(coff_file_header) + header.opt_hdr_size,
+        header.num_sections );
+    dmp_objects();
+    free_sections_table();
     unload_string_table();
     dmp_symtab( header.sym_table, header.num_symbols );
     return 1;

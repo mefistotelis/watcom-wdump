@@ -145,12 +145,53 @@ static  char    *PEObjFlags[] = {
     "WRITABLE"
 };
 
+pe_object * Section_objs;
+unsigned int Section_objs_count = 0;
+
 #define IN_RANGE( tbl, pe_obj )                         \
         (Pe_head.table[ tbl ].rva >= (pe_obj).rva       \
          && Pe_head.table[ tbl ].rva < ((pe_obj).rva+(pe_obj).physical_size))
 
 #define PHYS_OFFSET( tbl, pe_obj )              \
         ((pe_obj).physical_offset + Pe_head.table[tbl].rva - (pe_obj).rva)
+
+/*
+ * Parses the Section Table of PE/PL file of given size at given offset.
+ * Stores the data in Section_objs structure.
+ */
+bool parse_pe_sections_table( unsigned_32 offset, unsigned_32 num_objects )
+/*********************************************************************/
+{
+    if( num_objects == 0 ) return ( 0 );
+    Wlseek( offset );
+    Section_objs = Wmalloc( num_objects * sizeof(pe_object) );
+    Wread( Section_objs, num_objects * sizeof(pe_object) );
+    Section_objs_count = num_objects;
+    return ( 1 );
+}
+
+/*
+ * Frees the global Section Table structure.
+ * Stores the data in Section_objs structure.
+ */
+void free_sections_table( void )
+/*********************************************************************/
+{
+    free ( Section_objs );
+    Section_objs = NULL;
+    Section_objs_count = 0;
+}
+
+/*
+ * Parses the Section Table of PE/PL file. Acquires its ofset and size from Pe_head.
+ * Stores the data in Section_objs structure.
+ */
+bool parse_pe_sections( void )
+/*********************************************************************/
+{
+  return parse_pe_sections_table( New_exe_off + offsetof( pe_header, magic ) +
+        Pe_head.nt_hdr_size, Pe_head.num_objects );
+}
 
 /*
  * Dump the NT Executable Header, if any.
@@ -195,8 +236,9 @@ bool Dmp_pe_head( void )
         Wdputslc( "H\n" );
     }
     Wdputslc( "\n" );
-    Wlseek( New_exe_off + offsetof( pe_header, magic ) + Pe_head.nt_hdr_size );
-    dmp_objects( Pe_head.num_objects );
+
+    parse_pe_sections();
+    dmp_objects();
     if( Exp_off != 0 ) {
         Dmp_exports();
     }
@@ -209,6 +251,7 @@ bool Dmp_pe_head( void )
     if( Fix_off != 0 ) {
         Dmp_fixups();
     }
+    free_sections_table();
     return( 1 );
 }
 
@@ -302,20 +345,16 @@ static void DumpPEObjFlags( unsigned_32 flags )
 /*
  * Dump the Object Table.
  */
-extern void dmp_objects( unsigned num_objects )
+extern void dmp_objects( void )
 /*********************************************/
 {
     unsigned_16 i;
     pe_object * pe_obj;
-    pe_object * start;
     char        save;
 
-    if( num_objects == 0 ) return;
     Banner( "Section Table" );
-    pe_obj = Wmalloc( num_objects * sizeof(pe_object) );
-    Wread( pe_obj, num_objects * sizeof(pe_object) );
-    start = pe_obj;
-    for( i = 1; i <= num_objects; i++ ) {
+    pe_obj = Section_objs;
+    for( i = 1; i <= Section_objs_count; i++ ) {
         Wdputs( "object " );
         Putdec( i );
         Wdputs( ": name = " );
@@ -351,7 +390,6 @@ extern void dmp_objects( unsigned num_objects )
         }
         pe_obj++;
     }
-    free( start );
 }
 
 
