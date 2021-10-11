@@ -58,11 +58,10 @@ static void print_info_title( char *title )
 /*****************************************/
 {
     char        buff[BUFFERSIZE];
-    char        sec;
 
     strcpy( buff, title );
     strcat( buff, " Info (section " );
-    strcat( buff, itoa( currSect, &sec, 10 ) );
+    itoa( currSect, buff + strlen(buff), 10 );
     strcat( buff, ")" );
     Banner( buff );
 
@@ -75,13 +74,10 @@ static void print_info_title( char *title )
 static void get_len_prefix_string( char *res, char *str )
 /*******************************************************/
 {
-    {
-        int     i;      // WTF?!
-        i = 1;
-    }
-    memcpy( res, &str[1], str[0] );
-    res[ *(unsigned_8 *)str ] = 0;
-
+    int i = (unsigned_8)str[0];
+    if (i >= MAX_EXPORT_NAME_LEN) i = MAX_EXPORT_NAME_LEN-1;
+    memcpy( res, &str[1], i );
+    res[i] = 0;
 } /* get_len_prefix_string */
 
 /*
@@ -929,8 +925,12 @@ static void dump_addr_info( section_dbg_header *sdh )
         Wlseek( cpos );
         Wread( Wbuff, sizeof( seg_info ) );
         Wlseek( cpos );
-        len = sizeof( seg_info ) + (si->num-1) * sizeof( addr_info );
-        Wread( Wbuff, len );
+        if (si->num > 0) {
+            len = sizeof( seg_info ) + (si->num-1) * sizeof( addr_info );
+            Wread( Wbuff, len );
+        } else {
+            len = sizeof( seg_info );
+        }
         Wdputs( " Base:  fileoff = " );
         Puthex( cpos-basepos, 8 );
         Wdputs( "H   seg = " );

@@ -220,10 +220,9 @@ static void dmp_banner( void )
 /****************************/
 {
     char        buff[BUFFERSIZE];
-    char        sec;
 
     strcpy( buff, "Data Table " );
-    strcat( buff, itoa( Data_count, &sec, 10 ) );
+    itoa( Data_count, buff + strlen(buff), 10 );
     Banner( buff );
 }
 
