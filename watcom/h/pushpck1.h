@@ -47,6 +47,7 @@
     #pragma pack(push,1)
 #else
     #pragma pack(push,1)
+    #define _WCUNALIGNED
 #endif
 
 #if defined( _NO_PRAGMA_PUSH_PACK )
