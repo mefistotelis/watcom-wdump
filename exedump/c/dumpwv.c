@@ -813,8 +813,8 @@ static void dump_module_info( section_dbg_header *sdh )
     while( bytes_read < total_bytes ) {
         Wlseek( cpos );
         Wread( Wbuff, sizeof( mod_info ) + 255 );
-        bytes_read += sizeof( mod_info ) + mi->name[0];
-        cpos += sizeof( mod_info ) + mi->name[0];
+        bytes_read += sizeof( mod_info ) + (unsigned_8)mi->name[0];
+        cpos += sizeof( mod_info ) + (unsigned_8)mi->name[0];
         get_len_prefix_string( name, mi->name );
         Putdecl( index, 3 );
         Wdputs( ") Name:   ");
@@ -838,7 +838,7 @@ static void dump_module_info( section_dbg_header *sdh )
         Wdputs( ", offset = " );
         Puthex( mi->di[DMND_LINES].info_off, 8 );
         Wdputslc( "H\n" );
-        memcpy( tmi, mi, sizeof( mod_info ) + mi->name[0] );
+        memcpy( tmi, mi, sizeof( mod_info ) + (unsigned_8)mi->name[0] );
         if( Debug_options & LOCALS ) {
             dump_locals( tmi );
         }
@@ -874,8 +874,8 @@ static void dump_global_info( section_dbg_header *sdh )
     while( bytes_read < total_bytes ) {
         Wlseek( cpos );
         Wread( Wbuff, sizeof( v3_gbl_info ) + 255 );
-        bytes_read += sizeof( v3_gbl_info ) + gi->name[0];
-        cpos += sizeof( v3_gbl_info ) + gi->name[0];
+        bytes_read += sizeof( v3_gbl_info ) + (unsigned_8)gi->name[0];
+        cpos += sizeof( v3_gbl_info ) + (unsigned_8)gi->name[0];
         get_len_prefix_string( name, gi->name );
         Wdputs( "  Name:  " );
         Wdputs(  name );
