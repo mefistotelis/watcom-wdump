@@ -29,7 +29,7 @@
 ****************************************************************************/
 
 
-#include <watcom.h>
+#include "watcom.h"
 #include "pushpck1.h"
 
 typedef struct {
