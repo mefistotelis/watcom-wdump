@@ -405,6 +405,30 @@ extern void dmp_objects( void )
 }
 
 /*
+ * Returns section offset inside PE file.
+ * Assumes that load_pe_headers() was called before.
+ * Returns the offset, or 0 if section not found.
+ */
+unsigned_32 get_pe_section_offset( unsigned_16 section )
+{
+    pe_object       pe_obj;
+    unsigned_32     cur_pos;        /* current offset position */
+    unsigned_16     i;
+
+    cur_pos = New_exe_off  + sizeof( Pe_head );
+    for( i = 0; i < Pe_head.num_objects; i++ ) {
+        Wlseek( cur_pos );
+        Wread( &pe_obj, sizeof( pe_object ) );
+        cur_pos += sizeof( pe_object );
+        if( Pe_head.table[ section ].rva >= pe_obj.rva
+         && Pe_head.table[ section ].rva < (pe_obj.rva+pe_obj.physical_size) ) {
+            return PHYS_OFFSET( section, pe_obj );
+        }
+    }
+    return 0;
+}
+
+/*
  * Reads EXE file header. Sets 'Form' to proper FORM_* constant,
  * loads the main file header and sets 'New_exe_off'.
  * This function is exact copy of load_exe_headers() from 'wdtab.c'.
@@ -452,15 +476,11 @@ unsigned_16 load_pe_headers( void )
 }
 
 /*
- * Dump the Pe export table (for .dll), if any.
+ * Dump the PE export table (for .dll), if any.
  */
 bool Dmp_pe_tab( void )
 /*********************/
 {
-    unsigned_32     cur_pos;        /* current offset position */
-    unsigned_16     i;
-    pe_object       pe_obj;
-
     if (load_pe_headers() != 0) return( 0 );
     switch( Form ) {
     case FORM_PE:
@@ -469,22 +489,11 @@ bool Dmp_pe_tab( void )
     default:
         return( 0 );
     }
-    Exp_off = 0;
-    cur_pos = New_exe_off  + sizeof( Pe_head );
-    for( i = 0; i < Pe_head.num_objects; i++ ) {
-        Wlseek( cur_pos );
-        Wread( &pe_obj, sizeof( pe_object ) );
-        cur_pos += sizeof( pe_object );
-        if( Pe_head.table[ PE_TBL_EXPORT ].rva >= pe_obj.rva
-         && Pe_head.table[ PE_TBL_EXPORT ].rva < (pe_obj.rva+pe_obj.physical_size) ) {
-            Exp_off = pe_obj.physical_offset
-                    + Pe_head.table[PE_TBL_EXPORT].rva - pe_obj.rva;
-        }
-    }
-    if( Exp_off != 0 ) {
-        Dmp_exp_tab();
-    } else {
+    Exp_off = get_pe_section_offset( PE_TBL_EXPORT );
+    if( Exp_off == 0 ) {
         Wdputslc( "no export table\n" );
+    } else {
+        Dmp_exp_tab();
     }
     return( 1 );
 }
