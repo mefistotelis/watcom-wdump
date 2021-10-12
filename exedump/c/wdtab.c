@@ -517,21 +517,41 @@ void Dmp_le_lx_tbls( void )
     dmp_res_nonres_tab( Os2_386_head.nonres_off );
 }
 
-static void dump_exports( void )
+/*
+ * Dump NE/LE/LX export table content in .DEF file format.
+ * Requires load_exe_headers() to be called before.
+ * Optionally, parse_??_entry_table() may be called before
+ * to enable entry point resolving.
+ */
+static void dump_os2_exports_as_def( void )
 /******************************/
 {
     unsigned_16     string_len;
     char            name[MAX_EXPORT_NAME_LEN];
     unsigned_16     ordinal;
+    struct int_entry_pnt    *find;
 
     while( (string_len = read_res_nonres_nam( name, &ordinal )) != 0 ) {
         Wdputs( "    " );
         Wdputs( name );
-        while( string_len++ < 43 ) {
-            Wdputc( ' ' );
+        if ((Import_format & IMPORT_INCADDR) || (Import_format & IMPORT_INCORDN)) {
+            while( string_len++ < 43 ) {
+                Wdputc( ' ' );
+            }
         }
-        Wdputs( " @" );
-        Putdec( ordinal );
+        if (Import_format & IMPORT_INCORDN) {
+            Wdputs( " @" );
+            Putdec( ordinal );
+        }
+        if (Import_format & IMPORT_INCADDR) {
+            find = get_entry_point_by_ordinal( ordinal );
+            if ( find != NULL ) {
+              Wdputs( " ; " );
+              Puthex( find->seg_num, 4 );
+              Wdputs( ":" );
+              Puthex( find->offset, 8 );
+            }
+        }
         Wdputslc( "\n" );
     }
 }
@@ -603,7 +623,7 @@ bool Dmp_os2_exports( void )
     Wdputslc( "EXPORTS\n" );
 
     /* Print exports in resident table */
-    dump_exports();
+    dump_os2_exports_as_def();
 
     /* Seek to non-resident table */
     if( Form == FORM_NE ) {
@@ -623,7 +643,7 @@ bool Dmp_os2_exports( void )
     }
 
     /* Print exports in non-resident table */
-    dump_exports();
+    dump_os2_exports_as_def();
 
     return( 1 );
 }
