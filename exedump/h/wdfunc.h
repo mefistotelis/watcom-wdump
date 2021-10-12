@@ -78,6 +78,7 @@ extern bool Dmp_macho_head( void );
  */
 extern bool Dmp_dwarf( void );
 extern bool Dmp_mdbg_head( void );
+extern bool Dmp_mdbg_head_as_map( void );
 
 /*
  * wsect.c
@@ -96,6 +97,7 @@ extern uint Lookup_section_name( const char * );
  * dumpwv.c
  */
 extern void Dump_section( void );
+extern void Dump_section_as_map( void );
 extern void Get_local_name( char *, unsigned_8 *, unsigned_8 * );
 extern unsigned_8 *Get_type_index( unsigned_8 *, unsigned_16 * );
 extern unsigned_8 *Dump_location_expression( unsigned_8 *, char * );

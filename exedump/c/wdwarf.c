@@ -58,6 +58,8 @@ typedef struct {
     unsigned_32 info_size;
 } debug_header;
 
+extern char  Fname[ _MAX_FNAME ];
+
 static void set_sects( void )
 /***************************/
 {
@@ -164,6 +166,22 @@ static void dmp_master( master_dbg_header mdh )
 }
 
 /*
+ * Skip dumping the Master Debug Header.
+ */
+static void parse_master( master_dbg_header mdh )
+/*********************************************/
+{
+    Curr_sectoff -= (long)mdh.debug_size;
+    Wlseek( Curr_sectoff );
+    Lang_lst = Wmalloc( mdh.lang_size );
+    Wread( Lang_lst, mdh.lang_size );
+    Curr_sectoff += (long)mdh.lang_size;
+    Wbuff = Wmalloc( MAX_BUFF );
+    Wread( Wbuff, mdh.segment_size );
+    Curr_sectoff += (long)mdh.segment_size;
+}
+
+/*
  * Dump the Debug Header, if any.
  */
 bool Dmp_mdbg_head( void )
@@ -213,6 +231,38 @@ bool Dmp_mdbg_head( void )
                 Dmp_seg_data( Curr_sectoff, dbg.info_size - sizeof( debug_header ) );
             }
         }
+    }
+}
+
+/*
+ * Dump the Debug Header, (if any) into .MAP format.
+ */
+bool Dmp_mdbg_head_as_map( void )
+/************************/
+{
+    debug_header        dbg;
+    char                *signature = "TIS";
+    unsigned_16         cnt;
+    master_dbg_header   mdh;
+
+    Wdputs( "MAP file for module '" );
+    Wdputs( Fname );
+    Wdputslc( "'\n" );
+
+    cnt = 0;
+    Curr_sectoff = lseek( Handle, 0, SEEK_END );
+    Wlseek( Curr_sectoff -(int)sizeof( master_dbg_header ) );
+    Wread( &mdh, sizeof( master_dbg_header ) );
+    if( mdh.signature == VALID_SIGNATURE &&
+        mdh.exe_major_ver == EXE_MAJOR_VERSION &&
+        (signed)mdh.exe_minor_ver <= EXE_MINOR_VERSION &&
+        mdh.obj_major_ver == OBJ_MAJOR_VERSION &&
+        mdh.obj_minor_ver <= OBJ_MINOR_VERSION ) {
+        parse_master( mdh );
+        Dump_section_as_map();
+        return( 1 );
+    } else {
+        // This case is not handled yet for .MAP dumping
     }
 }
 

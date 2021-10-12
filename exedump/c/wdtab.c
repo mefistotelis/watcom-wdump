@@ -723,7 +723,7 @@ bool dmp_os2_exports_as_def( void )
     }
 
     /* Print exports in non-resident table */
-    dump_os2_exports_as_def();
+    dump_os2_exports_as_map();
 
     return( 1 );
 }

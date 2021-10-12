@@ -142,6 +142,11 @@ static void dmp_exe( void )
           Wdputslc( "Unsupported output format\n" );
       }
     }
+    if( Options_dmp & DEBUG_DEF ) {
+        if( !Dmp_mdbg_head_as_map() ) {
+            Wdputslc( "No debugging information found\n" );
+        }
+    }
     if( Options_dmp & BINARY_DMP ) {
         len = lseek( Handle, -Hexoff, SEEK_END );
         Wdputs( "offset = " );

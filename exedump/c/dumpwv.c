@@ -125,6 +125,102 @@ static void get_len_prefix_string( char *res, char *str )
 } /* get_len_prefix_string */
 
 /*
+ * Parses Global section of Debug Info.
+ * Stores the data in Debug_names structure.
+ */
+static void parse_debug_global_names( section_dbg_header *sdh )
+/*********************************************************************/
+{
+    struct debug_name_itm    *new_itm;
+    unsigned_32 total_bytes;
+    unsigned_32 bytes_read;
+    v3_gbl_info *gi;
+    long        cpos;
+    total_bytes = sdh->addr_offset - sdh->gbl_offset;
+    bytes_read = 0;
+    gi = (v3_gbl_info *) Wbuff;
+    cpos = Curr_sectoff + sdh->gbl_offset;
+    while( bytes_read < total_bytes ) {
+        Wlseek( cpos );
+        Wread( Wbuff, sizeof( v3_gbl_info ) + 255 );
+        bytes_read += sizeof( v3_gbl_info ) + (unsigned_8)gi->name[0];
+        cpos += sizeof( v3_gbl_info ) + (unsigned_8)gi->name[0];
+        new_itm = new_debug_name_itm();
+        get_len_prefix_string( new_itm->name, gi->name );
+        new_itm->seg_num = gi->addr.segment;
+        new_itm->offset = gi->addr.offset;
+        new_itm->module = gi->mod;
+        new_itm->kind = gi->kind;
+    }
+}
+
+/*
+ * Dump the Debug names into .MAP file format.
+ */
+bool dmp_debug_names_as_map( void )
+/**********************/
+{
+    struct debug_name_itm *find;
+    char name[MAX_EXPORT_NAME_LEN];
+    unsigned_16 string_len;
+    char *cptr;
+
+    if( Debug_names == NULL ) {
+        return 0;
+    }
+    for( find = Debug_names; find != NULL; find = find->next ) {
+        string_len = 0;
+        Wdputs( " " );
+        Puthex( find->seg_num, 4 );
+        Wdputs( ":" );
+        Puthex( find->offset, 8 );
+        Wdputs( "       " );
+        string_len += 20;
+        if ((DbgImp_format & DBGIMP_NMSTRIP) && (strlen(find->name)>3)) {
+          cptr = strrchr(find->name,'?');
+          if (cptr == NULL) {
+              cptr = find->name;
+              while (cptr[0] == '_') cptr++;
+          } else {
+              cptr++;
+              while ((cptr[0] == '$') || (cptr[0] == '.')) cptr++;
+          }
+          if (cptr[0] == '\0') cptr = find->name;
+          strcpy(name, cptr);
+          cptr = strchr(name,'$');
+          if (cptr != NULL) cptr[0] = '\0';
+          cptr = name + strlen(name) - 1;
+          while ((cptr>name+1) && (cptr[0]=='_')) {
+              cptr[0] = '\0';
+              cptr--;
+          }
+        } else {
+          strcpy(name, find->name);
+        }
+        Wdputs( name );
+        string_len += strlen( name );
+        if ((DbgImp_format & DBGIMP_INCMODL) || (DbgImp_format & DBGIMP_INCKIND)) {
+            while( string_len++ < 63 ) {
+                Wdputc( ' ' );
+            }
+            Wdputs( ";" );
+        }
+        if (DbgImp_format & DBGIMP_INCMODL) {
+            Wdputs( " module " );
+            Putdec( find->module );
+            Wdputs( "," );
+        }
+        if (DbgImp_format & DBGIMP_INCKIND) {
+            Wdputs( " kind " );
+            Putdec( find->kind );
+            Wdputs( "," );
+        }
+        Wdputslc( "\n" );
+    }
+    return ( 1 );
+}
+
+/*
  * dump_line_numbers - dump line number info
  */
 static void dump_line_numbers( mod_info *mi )
@@ -1031,3 +1127,26 @@ void Dump_section( void )
         dump_addr_info( &sdh );
     }
 } /* dump_section */
+
+/*
+ * Dump the current section into .MAP file format.
+ */
+void Dump_section_as_map( void )
+/***********************/
+{
+    section_dbg_header  sdh;
+
+    Wread( &sdh, sizeof(section_dbg_header) );
+    Wdputs( "Section " );
+    Putdec( sdh.section_id );
+    Wdputs( " (off=" );
+    Puthex( Curr_sectoff, 8 );
+    Wdputslc( ")\n" );
+    currSect = sdh.section_id;
+
+    parse_debug_global_names( &sdh );
+    // Entries in debug info are usually sorted by offsets (values)
+    Wdputslc( "     Address         Publics by Value\n");
+    dmp_debug_names_as_map();
+    free_debug_name_itms();
+}
