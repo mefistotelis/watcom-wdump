@@ -563,18 +563,26 @@ bool Dmp_os2_exports( void )
     /* Read appropriate header */
     Wlseek( New_exe_off );
     Wread( &Os2_386_head, sizeof( Os2_386_head ) );
-    if( Os2_386_head.signature == OS2_SIGNATURE_WORD ) {
+    switch ( Os2_386_head.signature ) {
+      case OS2_SIGNATURE_WORD:
         Form = FORM_NE;
         Wlseek( New_exe_off );
         Wread( &Os2_head, sizeof( Os2_head ) );
-    } else {
-        if( Os2_386_head.signature == OSF_FLAT_SIGNATURE ) {
-            Form = FORM_LE;
-        } else if( Os2_386_head.signature == OSF_FLAT_LX_SIGNATURE ) {
-            Form = FORM_LX;
-        } else {
-            return( 0 );
-        }
+        break;
+      case PE_SIGNATURE:
+      case PL_SIGNATURE:
+        Form = FORM_PE;
+        Wlseek( New_exe_off );
+        Wread( &Pe_head, sizeof( Pe_head ) );
+        break;
+      case OSF_FLAT_SIGNATURE:
+        Form = FORM_LE;
+        break;
+      case OSF_FLAT_LX_SIGNATURE:
+        Form = FORM_LX;
+        break;
+      default:
+        return( 0 );
     }
 
     if( Form == FORM_NE ) {

@@ -131,9 +131,13 @@ extern int                      Form;
 extern bool                     Byte_swap;      /* endianness flag         */
 
 enum {
+    FORM_UNKN,
+    FORM_MZ,
     FORM_NE,
     FORM_LE,
-    FORM_LX
+    FORM_LX,
+    FORM_PE,
+    FORM_PL,
 };
 
 typedef struct {

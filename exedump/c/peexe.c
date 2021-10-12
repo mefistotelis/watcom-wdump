@@ -404,6 +404,52 @@ extern void dmp_objects( void )
     }
 }
 
+/*
+ * Reads EXE file header. Sets 'Form' to proper FORM_* constant,
+ * loads the main file header and sets 'New_exe_off'.
+ * This function is exact copy of load_exe_headers() from 'wdtab.c'.
+ */
+unsigned_16 load_pe_headers( void )
+{
+    Wlseek( 0 );
+    /* Check executable format; handle stubless modules */
+    Wread( &Dos_head, sizeof( Dos_head ) );
+    if( Dos_head.signature == DOS_SIGNATURE ) {
+        if( Dos_head.reloc_offset != OS2_EXE_HEADER_FOLLOWS ) {
+            return( 1 );
+        }
+        Wlseek( OS2_NE_OFFSET );
+        Wread( &New_exe_off, sizeof( New_exe_off ) );
+    } else {
+        New_exe_off = 0;
+    }
+
+    /* Read appropriate header */
+    Wlseek( New_exe_off );
+    Wread( &Os2_386_head, sizeof( Os2_386_head ) );
+    switch ( Os2_386_head.signature ) {
+      case OS2_SIGNATURE_WORD:
+        Form = FORM_NE;
+        Wlseek( New_exe_off );
+        Wread( &Os2_head, sizeof( Os2_head ) );
+        break;
+      case PE_SIGNATURE:
+      case PL_SIGNATURE:
+        Form = FORM_PE;
+        Wlseek( New_exe_off );
+        Wread( &Pe_head, sizeof( Pe_head ) );
+        break;
+      case OSF_FLAT_SIGNATURE:
+        Form = FORM_LE;
+        break;
+      case OSF_FLAT_LX_SIGNATURE:
+        Form = FORM_LX;
+        break;
+      default:
+        return( 1 );
+    }
+    return( 0 );
+}
 
 /*
  * Dump the Pe export table (for .dll), if any.
@@ -415,20 +461,10 @@ bool Dmp_pe_tab( void )
     unsigned_16     i;
     pe_object       pe_obj;
 
-    Wread( &Dos_head, sizeof( Dos_head ) );
-    if( Dos_head.signature != DOS_SIGNATURE ) {
-        return( 0 );
-    }
-    if( Dos_head.reloc_offset != OS2_EXE_HEADER_FOLLOWS ) {
-        return( 0 );
-    }
-    Wlseek( OS2_NE_OFFSET );
-    Wread( &New_exe_off, sizeof( New_exe_off ) );
-    Wlseek( New_exe_off );
-    Wread( &Pe_head, sizeof( pe_header ) );
-    switch( Pe_head.signature ) {
-    case PE_SIGNATURE:
-    case PL_SIGNATURE:
+    if (load_pe_headers() != 0) return( 0 );
+    switch( Form ) {
+    case FORM_PE:
+    case FORM_PL:
         break;
     default:
         return( 0 );

@@ -54,7 +54,7 @@ static void dmp_exe( void )
     bool            dos_dmp;
     unsigned_32     len;
 
-    Form = FORM_NE;
+    Form = FORM_UNKN;
     Data_count = 0;
     Sizeleft = 0;
     Num_buff = -1;
