@@ -102,6 +102,59 @@ void free_export_itms( void )
 }
 
 /*
+ * Parses the Export Section of PE/PL file. Is compatible ONLY with PE/PL files.
+ * Stores the data in Export_itms structure.
+ */
+static void parse_pe_export_section( unsigned_32 addr_offs, unsigned_32 nam_offs,
+   unsigned_32 ord_offs, unsigned_32 addr_len, unsigned_32 nam_len, unsigned_32 ord_base )
+/*********************************************************************/
+{
+    unsigned_32     *address;
+    unsigned_16     *ordinal;
+    unsigned_32     *textname;
+    struct int_export_itm    *new_itm;
+    unsigned_32     i;
+
+    if( addr_len == 0 ) {
+        return;
+    }
+    /* reading addresses */
+    Wlseek( addr_offs );
+    i = addr_len * sizeof( unsigned_32 );
+    address = Wmalloc( i );
+    Wread( address, i );
+    /* reading ordinals */
+    Wlseek( ord_offs );
+    i = addr_len * sizeof( unsigned_16 );
+    ordinal = Wmalloc( i );
+    Wread( ordinal, i );
+    /* reading name offsets */
+    if (nam_len > addr_len) nam_len = addr_len;
+    Wlseek( nam_offs );
+    i = addr_len * sizeof( unsigned_32 );
+    textname = Wmalloc( i );
+    i = nam_len * sizeof( unsigned_32 );
+    Wread( textname, i );
+    for (i = nam_len; i < addr_len; i++ )
+      textname[i] = 0;
+
+    /* creating Export_itms structure */
+    for( i = addr_len; i > 0; i-- )
+    {
+        new_itm = new_export_itm();
+        new_itm->ordinal = ordinal[i-1]+ord_base;
+        new_itm->nam_offs = textname[i-1];
+        new_itm->body_rva = address[i-1];
+        // The following parameters can't be read directly from export table
+        new_itm->seg_num = 0xFFFFu;
+        new_itm->offset = 0;
+    }
+    free(address);
+    free(ordinal);
+    free(textname);
+}
+
+/*
  * Computes segments and addresses in Export Section using RVAs.
  * Updates the data in Export_itms structure.
  * Requires Section_objs to be loaded.
@@ -324,6 +377,123 @@ void Dmp_exp_tab( void )
             pe_export.ordinal_table_rva -
             Pe_head.table[ PE_TBL_EXPORT ].rva + Exp_off,
             pe_export.num_name_ptrs, pe_export.ordinal_base );
+}
+
+/*
+ * Dump the PE/PL Export Table in .DEF file format.
+ * Assumes that load_exe_headers() was called before,
+ * and Exp_off is set to proper value.
+ */
+bool dmp_pe_exports_as_def( void )
+/**********************/
+{
+    pe_export_directory     pe_export;
+    struct int_export_itm  *find;
+    unsigned_16     string_len;
+    char            *name;
+
+    Wlseek( Exp_off );
+    Wread( &pe_export, sizeof( pe_export_directory ) );
+    parse_pe_export_section ( pe_export.address_table_rva -
+            Pe_head.table[ PE_TBL_EXPORT ].rva + Exp_off,
+            pe_export.name_ptr_table_rva -
+            Pe_head.table[ PE_TBL_EXPORT ].rva + Exp_off,
+            pe_export.ordinal_table_rva -
+            Pe_head.table[ PE_TBL_EXPORT ].rva + Exp_off,
+            pe_export.num_eat_entries, pe_export.num_name_ptrs,
+            pe_export.ordinal_base );
+    if( Export_itms == NULL ) {
+        return 0;
+    }
+    name = Wmalloc( BUFFERSIZE );
+    Wdputs( "LIBRARY " );
+    Wdputs( Fname );
+    Wdputslc( "\n" );
+    Wdputslc( "EXPORTS\n" );
+    for( find = Export_itms; find != NULL; find = find->next ) {
+        Wlseek( find->nam_offs - Pe_head.table[ PE_TBL_EXPORT ].rva + Exp_off );
+        Wread( name, BUFFERSIZE-1 );
+        name[BUFFERSIZE-1] = '\0';
+        Wdputs( "    " );
+        Wdputs( name );
+        string_len = strlen( name );
+        if ((Import_format & IMPORT_INCADDR) || (Import_format & IMPORT_INCORDN)) {
+            while( string_len++ < 43 ) {
+                Wdputc( ' ' );
+            }
+        }
+        if (Import_format & IMPORT_INCORDN) {
+            Wdputs( " @" );
+            Putdec( find->ordinal );
+        }
+        if (Import_format & IMPORT_INCADDR) {
+              Wdputs( " ; RVA=0x" );
+              Puthex( find->body_rva, 8 );
+        }
+        Wdputslc( "\n" );
+    }
+    free_export_itms();
+    return ( 1 );
+}
+
+/*
+ * Dump the PE/PL Export Table in .MAP file format.
+ * Assumes that load_exe_headers() was called before,
+ * and Exp_off is set to proper value.
+ */
+bool dmp_pe_exports_as_map( void )
+/**********************/
+{
+    pe_export_directory     pe_export;
+    struct int_export_itm  *find;
+    unsigned_16     string_len;
+    char            *name;
+
+    Wlseek( Exp_off );
+    Wread( &pe_export, sizeof( pe_export_directory ) );
+    parse_pe_export_section ( pe_export.address_table_rva -
+            Pe_head.table[ PE_TBL_EXPORT ].rva + Exp_off,
+            pe_export.name_ptr_table_rva -
+            Pe_head.table[ PE_TBL_EXPORT ].rva + Exp_off,
+            pe_export.ordinal_table_rva -
+            Pe_head.table[ PE_TBL_EXPORT ].rva + Exp_off,
+            pe_export.num_eat_entries, pe_export.num_name_ptrs,
+            pe_export.ordinal_base );
+    if( Export_itms == NULL ) {
+        return 0;
+    }
+    compute_pe_export_section_adresses();
+    name = Wmalloc( BUFFERSIZE );
+    Wdputs( "MAP file for module '" );
+    Wdputs( Fname );
+    Wdputslc( "'\n" );
+    // Publics in PEs are sorted by name
+    Wdputslc( "     Address         Publics by Name\n");
+    for( find = Export_itms; find != NULL; find = find->next ) {
+        string_len = 0;
+        Wdputs( " " );
+        Puthex( find->seg_num, 4 );
+        Wdputs( ":" );
+        Puthex( find->offset, 8 );
+        Wdputs( "       " );
+        string_len += 20;
+        Wlseek( find->nam_offs - Pe_head.table[ PE_TBL_EXPORT ].rva + Exp_off );
+        Wread( name, BUFFERSIZE-1 );
+        name[BUFFERSIZE-1] = '\0';
+        Wdputs( name );
+        string_len += strlen( name );
+        if (Import_format & IMPORT_INCORDN) {
+            while( string_len++ < 63 ) {
+                Wdputc( ' ' );
+            }
+            Wdputs( "; @" );
+            Putdec( find->ordinal );
+        }
+        Wdputslc( "\n" );
+    }
+    free ( name );
+    free_export_itms();
+    return ( 1 );
 }
 
 /*

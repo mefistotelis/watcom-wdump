@@ -557,15 +557,56 @@ static void dump_os2_exports_as_def( void )
 }
 
 /*
- * Dump the NE/LE/LX exports table
+ * Dump NE/LE/LX export table content in .MAP file format.
+ * Requires load_exe_headers() to be called before.
+ * Optionally, parse_??_entry_table() may be called before
+ * to enable entry point resolving.
  */
-bool Dmp_os2_exports( void )
-/**************************/
+static void dump_os2_exports_as_map( void )
+/******************************/
 {
-    unsigned_32     res_nam_tab;
+    unsigned_8      string_len;
     char            name[MAX_EXPORT_NAME_LEN];
     unsigned_16     ordinal;
+    unsigned_16     seg_num;
+    unsigned_32     offset;
+    struct int_entry_pnt    *find;
 
+    while( (string_len = read_res_nonres_nam( name, &ordinal )) != 0 ) {
+        Wdputs( " " );
+        seg_num = 0xFFFFu;
+        offset = 0;
+        if (Import_format & IMPORT_INCADDR) {
+            find = get_entry_point_by_ordinal( ordinal );
+            if ( find != NULL ) {
+              seg_num = find->seg_num;
+              offset = find->offset;
+            }
+        }
+        Puthex( seg_num, 4 );
+        Wdputs( ":" );
+        Puthex( offset, 8 );
+        Wdputs( "       " );
+        string_len += 20;
+        Wdputs( name );
+        if (Import_format & IMPORT_INCORDN) {
+            while( string_len++ < 63 ) {
+                Wdputc( ' ' );
+            }
+            Wdputs( "; @" );
+            Putdec( ordinal );
+        }
+        Wdputslc( "\n" );
+    }
+}
+
+/*
+ * Reads EXE file header. Sets 'Form' to proper FORM_* constant,
+ * loads the main file header and sets 'New_exe_off'.
+ */
+unsigned_16 load_exe_headers( void )
+{
+    Wlseek( 0 );
     /* Check executable format; handle stubless modules */
     Wread( &Dos_head, sizeof( Dos_head ) );
     if( Dos_head.signature == DOS_SIGNATURE ) {
@@ -574,9 +615,7 @@ bool Dmp_os2_exports( void )
         }
         Wlseek( OS2_NE_OFFSET );
         Wread( &New_exe_off, sizeof( New_exe_off ) );
-    } else if( Dos_head.signature == OSF_FLAT_LX_SIGNATURE
-      || Dos_head.signature == OSF_FLAT_SIGNATURE
-      || Dos_head.signature == OS2_SIGNATURE_WORD ) {
+    } else {
         New_exe_off = 0;
     }
 
@@ -604,12 +643,57 @@ bool Dmp_os2_exports( void )
       default:
         return( 0 );
     }
+    return( 1 );
+}
 
-    if( Form == FORM_NE ) {
-        res_nam_tab = New_exe_off + Os2_head.resident_off;
-    } else {
-        res_nam_tab = New_exe_off + Os2_386_head.resname_off;
+/*
+ * Returns the NE/LE/LX file resident names table offset.
+ * On error, returns 0.
+ */
+unsigned_32 get_res_nam_tab_offset( void )
+{
+    switch (Form)
+    {
+      case FORM_NE:
+        return New_exe_off + Os2_head.resident_off;
+      case FORM_LE:
+      case FORM_LX:
+        return New_exe_off + Os2_386_head.resname_off;
+      default:
+        return 0;
     }
+}
+
+/*
+ * Returns the NE/LE/LX file non-resident names table offset.
+ * On error, returns 0.
+ */
+unsigned_32 get_nonres_nam_tab_offset( void )
+{
+    switch (Form)
+    {
+      case FORM_NE:
+        return Os2_head.nonres_off;
+      case FORM_LE:
+      case FORM_LX:
+        return Os2_386_head.nonres_off;
+      default:
+        return 0;
+    }
+}
+
+/*
+ * Dump the NE/LE/LX exports table in .DEF file format.
+ * Assumes that load_exe_headers() was called before.
+ */
+bool dmp_os2_exports_as_def( void )
+/**************************/
+{
+    unsigned_32     res_nam_tab;
+    char            name[MAX_EXPORT_NAME_LEN];
+    unsigned_16     ordinal;
+
+    res_nam_tab = get_res_nam_tab_offset();
     if( res_nam_tab == 0 ) return( 0 );
 
     /* Read and print module name */
@@ -626,11 +710,7 @@ bool Dmp_os2_exports( void )
     dump_os2_exports_as_def();
 
     /* Seek to non-resident table */
-    if( Form == FORM_NE ) {
-        res_nam_tab = Os2_head.nonres_off;
-    } else {
-        res_nam_tab = Os2_386_head.nonres_off;
-    }
+    res_nam_tab = get_nonres_nam_tab_offset();
     if( res_nam_tab == 0 ) return( 1 );
     Wlseek( res_nam_tab );
 
@@ -646,4 +726,107 @@ bool Dmp_os2_exports( void )
     dump_os2_exports_as_def();
 
     return( 1 );
+}
+
+/*
+ * Dump the NE/LE/LX exports table in .MAP file format.
+ * Assumes that load_exe_headers() was called before.
+ */
+bool dmp_os2_exports_as_map( void )
+/**************************/
+{
+    unsigned_32     res_nam_tab;
+    char            name[MAX_EXPORT_NAME_LEN];
+    unsigned_16     ordinal;
+
+    res_nam_tab = get_res_nam_tab_offset();
+    if( res_nam_tab == 0 ) return( 0 );
+
+    /* Read and print module name */
+    Wlseek( res_nam_tab );
+    if( read_res_nonres_nam( name, &ordinal ) == 0 ) {
+        return( 0 );
+    }
+    Wdputs( "MAP file for module '" );
+    Wdputs( name );
+    Wdputslc( "'\n" );
+    // Publics in DLLs are usually sorted by name
+    Wdputslc( "     Address         Publics by Name\n");
+
+    /* Print exports in resident table */
+    dump_os2_exports_as_map();
+
+    /* Seek to non-resident table */
+    res_nam_tab = get_nonres_nam_tab_offset();
+    if( res_nam_tab == 0 ) return( 1 );
+    Wlseek( res_nam_tab );
+
+    /* See if there is comment */
+    if( read_res_nonres_nam( name, &ordinal ) == 0 ) {
+        return( 1 );
+    }
+    if( ordinal != 0 ) {
+        Wlseek( res_nam_tab );  /* No comment, seek back */
+    }
+
+    /* Print exports in non-resident table */
+    dump_os2_exports_as_def();
+
+    return( 1 );
+}
+
+bool dmp_pe_exports_as_def( void );
+bool dmp_pe_exports_as_map( void );
+
+/*
+ * Dump exports table of any DLL into .DEF file format.
+ */
+bool Dmp_dll_exports_as_def( void )
+/**************************/
+{
+    if (load_exe_headers() != 0) return( 0 );
+    switch (Form)
+    {
+      case FORM_NE:
+        if (Import_format & IMPORT_INCADDR)
+          parse_ne_entry_table( New_exe_off + Os2_head.entry_off, Os2_head.entry_size );
+        return dmp_os2_exports_as_def();
+      case FORM_LE:
+      case FORM_LX:
+        return dmp_os2_exports_as_def();
+      case FORM_PE:
+      case FORM_PL:
+        Exp_off = get_pe_section_offset( PE_TBL_EXPORT );
+        if( Exp_off == 0 ) return( 0 );
+        return dmp_pe_exports_as_def();
+      default:
+        return 0;
+    }
+}
+
+/*
+ * Dump exports table of any DLL into .MAP file format.
+ */
+bool Dmp_dll_exports_as_map( void )
+/**************************/
+{
+    if (load_exe_headers() != 0) return( 0 );
+    switch (Form)
+    {
+      case FORM_NE:
+        if (Import_format & IMPORT_INCADDR)
+          parse_ne_entry_table( New_exe_off + Os2_head.entry_off, Os2_head.entry_size );
+        return dmp_os2_exports_as_map();
+      case FORM_LE:
+      case FORM_LX:
+        return dmp_os2_exports_as_map();
+      case FORM_PE:
+      case FORM_PL:
+        Exp_off = get_pe_section_offset( PE_TBL_EXPORT );
+        if( Exp_off == 0 ) return( 0 );
+        parse_pe_sections();
+        return dmp_pe_exports_as_map();
+      default:
+        return 0;
+    }
 }

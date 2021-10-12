@@ -129,9 +129,18 @@ static void dmp_exe( void )
         }
     }
     if( Options_dmp & IMPORT_DEF ) {
-        if( !Dmp_os2_exports() ) {
-            Wdputslc( "No exports found\n" );
-        }
+      if( Import_format & IMPORTFMT_DEF ) {
+          if( !Dmp_dll_exports_as_def() ) {
+              Wdputslc( "No exports found\n" );
+          }
+      } else
+      if( Import_format & IMPORTFMT_MAP ) {
+          if( !Dmp_dll_exports_as_map() ) {
+              Wdputslc( "No exports found\n" );
+          }
+      } else {
+          Wdputslc( "Unsupported output format\n" );
+      }
     }
     if( Options_dmp & BINARY_DMP ) {
         len = lseek( Handle, -Hexoff, SEEK_END );

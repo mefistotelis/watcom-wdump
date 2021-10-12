@@ -109,9 +109,9 @@ extern void Dmp_type( int, unsigned_32 * );
  * wpetbls.c
  */
 extern void Dmp_exports( void );
-
 extern void Dmp_imports( void );
 extern void Dmp_exp_tab( void );
+void compute_pe_export_section_adresses( void );
 
 /*
  * wperes.c
@@ -130,7 +130,8 @@ extern void Dmp_seg_tab( void );
 extern void Dmp_ne_tbls( void );
 extern void Dmp_le_lx_tbls( void );
 extern void Dmp_ordinal( unsigned_16 );
-extern bool Dmp_os2_exports( void );
+extern bool Dmp_dll_exports_as_def( void );
+extern bool Dmp_dll_exports_as_map( void );
 
 /*
  * wdfix.c
