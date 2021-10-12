@@ -78,7 +78,8 @@
 #define IMPORT_LIB      0x0100
 #define BINARY_DMP      0x0200
 #define PAGE_DMP        0x0400  /* dump the page maps       */
-#define IMPORT_DEF      0x0800
+#define IMPORT_DEF      0x0800  /* create DEF/MAP file from export table */
+#define DEBUG_DEF       0x1000  /* create DEF/MAP file from debug data */
 
 #define MODULE_INFO     0x01
 #define GLOBAL_INFO     0x02
@@ -121,8 +122,10 @@ extern struct os2_flat_header   Os2_386_head;   /* the new_header (V2.0)   */
 extern struct os2_exe_header    Os2_head;       /* the new_header          */
 extern struct dos_exe_header    Dos_head;       /* the old_header          */
 extern unsigned_16              Resrc_shift_cnt;/* the restab shift        */
-extern unsigned_16              Options_dmp;
-extern unsigned_8               Debug_options;
+extern unsigned_16              Options_dmp;    /* common dump options, from command line */
+extern unsigned_8               Debug_options;  /* debug data dump options, from command line */
+extern unsigned_8               Import_format;  /* export table output format options */
+extern unsigned_8               DbgImp_format;  /* debug data output format options */
 extern char                     *Name;          /* file name               */
 extern unsigned_32              Load_len;       /* start of debugging info */
 extern unsigned_32              Resrc_end;      /* end of resrc table      */
@@ -139,6 +142,15 @@ enum {
     FORM_PE,
     FORM_PL,
 };
+
+#define IMPORTFMT_DEF     0x01
+#define IMPORTFMT_MAP     0x02
+#define IMPORT_INCADDR    0x10
+#define IMPORT_INCORDN    0x20
+
+#define DBGIMP_INCMODL    0x10
+#define DBGIMP_INCKIND    0x20
+#define DBGIMP_NMSTRIP    0x40
 
 typedef struct {
     unsigned_16 len;

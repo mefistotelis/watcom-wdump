@@ -70,6 +70,8 @@ struct dos_exe_header   Dos_head;
 unsigned_16             Resrc_shift_cnt;
 unsigned_16             Options_dmp;
 unsigned_8              Debug_options;
+unsigned_8              Import_format;
+unsigned_8              DbgImp_format;
 char                    *Name;
 unsigned_32             Load_len;
 unsigned_32             Resrc_end;

@@ -213,7 +213,7 @@ static void usage( void )
     Wdputs( "        -A<segnum> like -a but only applies to segment <segnum>\n" );
     Wdputs( "        -b causes binary dump of the entire file\n" );
     Wdputs( "        -B<hexoff> causes binary dump beginning at offset in hex\n" );
-    Wdputs( "        -d causes debugging information to be dumped\n" );
+    Wdputs( "        -d causes debugging information to be dumped in text form\n" );
     Wdputs( "        -D<opts> controls debugging information to be dumped\n" );
     Wdputs( "           a : show addr infomation\n" );
     Wdputs( "           g : show global infomation\n" );
@@ -230,11 +230,18 @@ static void usage( void )
     Wdputs( "        -r causes more resource information to be dumped\n" );
     Wdputs( "        -s causes segments' data to be dumped\n" );
     Wdputs( "        -S<segnum> like -s but only applies to segment <segnum>\n" );
-    Wdputs( "        -x dump export information for NE/LX DLLs in .DEF format\n" );
+    Wdputs( "        -x dump export information for PE/NE/LX DLLs in .DEF format\n" );
+    Wdputs( "        -X<opts> dump export information for DLLs into chosen format\n" );
+    Wdputs( "           d : .DEF format          m : .MAP format\n" );
+    Wdputs( "           o : output ordinals      a : output entry address\n" );
+    Wdputs( "        -n dump debugging information into .MAP format\n" );
+    Wdputs( "        -N<opts> dump debugging info into .MAP with chosen options\n" );
+    Wdputs( "           m : output module index  k : output entry kind\n" );
+    Wdputs( "           s : strip names to basic form\n" );
 }
 
 /*
- * debug options
+ * Analysis of command line debug data dump options.
  */
 static void debug_opts( char ch )
 /*******************************/
@@ -264,6 +271,50 @@ static void debug_opts( char ch )
     }
 }
 
+/*
+ * Analysis of command line export information dump options.
+ */
+static void import_opts( char ch )
+/*******************************/
+{
+    switch( tolower( ch ) ) {
+    case 'd':
+        Import_format |= IMPORTFMT_DEF;
+        Import_format &= ~IMPORTFMT_MAP;
+        break;
+    case 'm':
+        Import_format |= IMPORTFMT_MAP;
+        Import_format &= ~IMPORTFMT_DEF;
+        Import_format |= IMPORT_INCADDR;
+        break;
+    case 'a':
+        Import_format |= IMPORT_INCADDR;
+        break;
+    case 'o':
+        Import_format |= IMPORT_INCORDN;
+        break;
+    }
+}
+
+/*
+ * Analysis of command line debug information dump to DEF/MAP options.
+ */
+static void dbgimp_opts( char ch )
+/*******************************/
+{
+    switch( tolower( ch ) ) {
+    case 'm':
+        DbgImp_format |= DBGIMP_INCMODL;
+        break;
+    case 'k':
+        DbgImp_format |= DBGIMP_INCKIND;
+        break;
+    case 's':
+        DbgImp_format |= DBGIMP_NMSTRIP;
+        break;
+    }
+}
+
 static int parse_options( int argc, char * const *argv )
 /******************************************************/
 {
@@ -271,11 +322,13 @@ static int parse_options( int argc, char * const *argv )
     char    *arg;
 
     Options_dmp = EXE_INFO;
+    Import_format = IMPORTFMT_DEF | IMPORT_INCORDN;
+    DbgImp_format = 0;
     Segspec = 0;
     Hexoff = 0;
 
     while( 1 ) {
-        while( (c = getopt( argc, argv, ":aA:bB:dD:efipqrsS:x" )) != -1 ) {
+        while( (c = getopt( argc, argv, ":aA:bB:dD:efipqrsS:xX:nN:" )) != -1 ) {
             switch( c ) {
             case 'A':
                 Options_dmp |= FIX_DMP | PAGE_DMP | RESRC_DMP | EXE_INFO | DOS_SEG_DMP | OS2_SEG_DMP;
@@ -340,8 +393,27 @@ static int parse_options( int argc, char * const *argv )
             case 's':
                 Options_dmp |= EXE_INFO | DOS_SEG_DMP | OS2_SEG_DMP;
                 break;
+            case 'X':
+                Import_format = 0;
+                arg = optarg;
+                while( islower( *arg ) || isupper( *arg ) ) {
+                    import_opts( *arg++ );
+                }
+                /* fall through */
             case 'x':
                 Options_dmp |= IMPORT_DEF;
+                Options_dmp |= QUIET;
+                Options_dmp &= ~EXE_INFO;
+                break;
+            case 'N':
+                DbgImp_format = 0;
+                arg = optarg;
+                while( islower( *arg ) || isupper( *arg ) ) {
+                    dbgimp_opts( *arg++ );
+                }
+                /* fall through */
+            case 'n':
+                Options_dmp |= DEBUG_DEF;
                 Options_dmp |= QUIET;
                 Options_dmp &= ~EXE_INFO;
                 break;
