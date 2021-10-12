@@ -193,6 +193,18 @@ bool parse_pe_sections( void )
         Pe_head.nt_hdr_size, Pe_head.num_objects );
 }
 
+unsigned_32 get_section_idx_for_rva( unsigned_32 rva )
+{
+  int i;
+  for (i=Section_objs_count; i>=0; i--)
+  {
+      if ((Section_objs[i].rva <= rva) &&
+          (Section_objs[i].rva + Section_objs[i].virtual_size > rva))
+          return i;
+  }
+  return 0xFFFFu;
+}
+
 /*
  * Dump the NT Executable Header, if any.
  */

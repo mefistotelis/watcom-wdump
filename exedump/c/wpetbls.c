@@ -64,6 +64,9 @@ static  char    *pe_import_msg[] = {
 
 extern char  Fname[ _MAX_FNAME ];
 
+extern pe_object * Section_objs;
+extern unsigned int Section_objs_count;
+
 struct  int_export_itm     *Export_itms = NULL;
 
 /*
@@ -95,6 +98,26 @@ void free_export_itms( void )
         nx_itm = cr_itm->next;
         free ( cr_itm );
         cr_itm = nx_itm;
+    }
+}
+
+/*
+ * Computes segments and addresses in Export Section using RVAs.
+ * Updates the data in Export_itms structure.
+ * Requires Section_objs to be loaded.
+ */
+void compute_pe_export_section_adresses( void )
+/*********************************************************************/
+{
+    struct int_export_itm  *find;
+    unsigned_16 i;
+    
+    for( find = Export_itms; find != NULL; find = find->next ) {
+        i = get_section_idx_for_rva( find->body_rva );
+        if (i != 0xFFFFu) {
+            find->seg_num = i+1;
+            find->offset = find->body_rva - Section_objs[i].rva;
+        }
     }
 }
 
