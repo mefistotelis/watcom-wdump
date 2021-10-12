@@ -158,6 +158,15 @@ struct int_export_itm {
         unsigned_32             offset;
 };
 
+struct debug_name_itm {
+        struct debug_name_itm * next;
+        unsigned_32             seg_num;
+        unsigned_32             offset;
+        char                    name[MAX_EXPORT_NAME_LEN];
+        unsigned_16             kind;
+        unsigned_16             module;
+};
+
 struct relocation_item {
         unsigned_8      addr_type;          /* see below                     */
         unsigned_8      reloc_type;         /* see below                     */

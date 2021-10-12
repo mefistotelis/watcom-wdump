@@ -51,6 +51,9 @@ static  char    *sdh_msg[] = {
     NULL
 };
 
+struct  debug_name_itm     *Debug_names = NULL;
+struct  debug_name_itm     *Debug_names_last = NULL;
+
 /*
  * print_info_title - Print out a title for an info section.
  */
@@ -66,6 +69,47 @@ static void print_info_title( char *title )
     Banner( buff );
 
 } /* print_info_title */
+
+/*
+ * Allocate a new debug_name_itm structure.
+ */
+struct debug_name_itm *new_debug_name_itm( void )
+/**********************************************/
+{
+    struct debug_name_itm    *new_itm;
+
+    new_itm = Wmalloc( sizeof( struct debug_name_itm ) );
+    if (Debug_names_last == NULL)
+    {
+      new_itm->next = Debug_names;
+      Debug_names = new_itm;
+    } else
+    {
+      Debug_names_last->next = new_itm;
+      new_itm->next = NULL;
+    }
+    Debug_names_last = new_itm;
+    return( new_itm );
+}
+
+/*
+ * Free the Debug_names structure.
+ */
+void free_debug_name_itms( void )
+/**********************************************/
+{
+    struct debug_name_itm    *cr_itm;
+    struct debug_name_itm    *nx_itm;
+
+    cr_itm = Debug_names;
+    Debug_names = NULL;
+    Debug_names_last = NULL;
+    while (cr_itm != NULL) {
+        nx_itm = cr_itm->next;
+        free ( cr_itm );
+        cr_itm = nx_itm;
+    }
+}
 
 /*
  * get_len_prefix_string - Make a length-prefixed string a 0 terminated string.
