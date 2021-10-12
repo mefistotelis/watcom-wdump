@@ -88,6 +88,15 @@
 #define LOCALS          0x10
 #define TYPES           0x20
 
+/*
+ * Error codes returned by functions.
+ */
+enum {
+    RET_OK,        /* Function succeeded */
+    RET_BADFMT,    /* Incorrect file format */
+    RET_NONEWHDR,  /* DOS header found, but no new header after it */
+};
+
 extern int                      Handle;         /* the file handle         */
 extern int                      Lhandle;        /* the listfile handle     */
 extern unsigned_16              Sizeleft;       /* size left from BSIZE    */

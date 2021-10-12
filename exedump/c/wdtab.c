@@ -603,6 +603,7 @@ static void dump_os2_exports_as_map( void )
 /*
  * Reads EXE file header. Sets 'Form' to proper FORM_* constant,
  * loads the main file header and sets 'New_exe_off'.
+ * Returns one of RET_* constants, RET_OK on success.
  */
 unsigned_16 load_exe_headers( void )
 {
@@ -611,7 +612,7 @@ unsigned_16 load_exe_headers( void )
     Wread( &Dos_head, sizeof( Dos_head ) );
     if( Dos_head.signature == DOS_SIGNATURE ) {
         if( Dos_head.reloc_offset != OS2_EXE_HEADER_FOLLOWS ) {
-            return( 0 );
+            return( RET_NONEWHDR );
         }
         Wlseek( OS2_NE_OFFSET );
         Wread( &New_exe_off, sizeof( New_exe_off ) );
@@ -641,9 +642,9 @@ unsigned_16 load_exe_headers( void )
         Form = FORM_LX;
         break;
       default:
-        return( 0 );
+        return( RET_BADFMT );
     }
-    return( 1 );
+    return( RET_OK );
 }
 
 /*
@@ -784,7 +785,7 @@ bool dmp_pe_exports_as_map( void );
 bool Dmp_dll_exports_as_def( void )
 /**************************/
 {
-    if (load_exe_headers() != 0) return( 0 );
+    if (load_exe_headers() != RET_OK) return( 0 );
     switch (Form)
     {
       case FORM_NE:
@@ -810,7 +811,7 @@ bool Dmp_dll_exports_as_def( void )
 bool Dmp_dll_exports_as_map( void )
 /**************************/
 {
-    if (load_exe_headers() != 0) return( 0 );
+    if (load_exe_headers() != RET_OK) return( 0 );
     switch (Form)
     {
       case FORM_NE:
