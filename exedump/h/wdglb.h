@@ -28,6 +28,7 @@
 *
 ****************************************************************************/
 
+#ifndef _WDGLB_H_INCLUDED
 
 #include "watcom.h"
 #include "exedos.h"
@@ -253,3 +254,6 @@ typedef enum {
 } dr_section;
 
 extern struct                   section_data Sections[DR_DEBUG_NUM_SECTS];
+
+#define _WDGLB_H_INCLUDED
+#endif

@@ -28,6 +28,7 @@
 *
 ****************************************************************************/
 
+#ifndef _DUMPWV_H_INCLUDED
 
 #include "machtype.h"
 #include "dbginfo.h"
@@ -255,3 +256,6 @@ typedef struct {
 
 #define NO_OFFSET       -1L
 #define NO_INDEX        0xffff
+
+#define _DUMPWV_H_INCLUDED
+#endif

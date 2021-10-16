@@ -28,6 +28,7 @@
 *
 ****************************************************************************/
 
+#ifndef _DWFUNC_H_INCLUDED
 
 /*
  * os2exe.c
@@ -213,3 +214,6 @@ extern bool Dmp_cv_head( void );
  * dumphll.c
  */
 extern bool Dmp_hll_head( void );
+
+#define _DWFUNC_H_INCLUDED
+#endif
