@@ -125,6 +125,32 @@ static void get_len_prefix_string( char *res, char *str )
 } /* get_len_prefix_string */
 
 /*
+ * Get base name from mangled c++ symbol.
+ */
+void get_mangled_symbol_base( char *base, const char *name )
+/**********************/
+{
+    char *cptr;
+    cptr = strrchr(name,'?');
+    if (cptr == NULL) {
+        cptr = name;
+        while (cptr[0] == '_') cptr++;
+    } else {
+        cptr++;
+        while ((cptr[0] == '$') || (cptr[0] == '.')) cptr++;
+    }
+    if (cptr[0] == '\0') cptr = name;
+    strcpy(base, cptr);
+    cptr = strchr(base,'$');
+    if (cptr != NULL) cptr[0] = '\0';
+    cptr = base + strlen(base) - 1;
+    while ((cptr>base+1) && (cptr[0]=='_')) {
+        cptr[0] = '\0';
+        cptr--;
+    }
+}
+
+/*
  * Parses Global section of Debug Info.
  * Stores the data in Debug_names structure.
  */
@@ -163,7 +189,6 @@ bool dmp_debug_names_as_map( void )
     struct debug_name_itm *find;
     char name[MAX_EXPORT_NAME_LEN];
     unsigned_16 string_len;
-    char *cptr;
 
     if( Debug_names == NULL ) {
         return 0;
@@ -177,23 +202,7 @@ bool dmp_debug_names_as_map( void )
         Wdputs( "       " );
         string_len += 20;
         if ((DbgImp_format & DBGIMP_NMSTRIP) && (strlen(find->name)>3)) {
-          cptr = strrchr(find->name,'?');
-          if (cptr == NULL) {
-              cptr = find->name;
-              while (cptr[0] == '_') cptr++;
-          } else {
-              cptr++;
-              while ((cptr[0] == '$') || (cptr[0] == '.')) cptr++;
-          }
-          if (cptr[0] == '\0') cptr = find->name;
-          strcpy(name, cptr);
-          cptr = strchr(name,'$');
-          if (cptr != NULL) cptr[0] = '\0';
-          cptr = name + strlen(name) - 1;
-          while ((cptr>name+1) && (cptr[0]=='_')) {
-              cptr[0] = '\0';
-              cptr--;
-          }
+          get_mangled_symbol_base(name, find->name);
         } else {
           strcpy(name, find->name);
         }
