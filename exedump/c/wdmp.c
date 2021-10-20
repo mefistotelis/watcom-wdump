@@ -128,7 +128,7 @@ static void dmp_exe( void )
             Wdputslc( "Invalid PE file\n" );
         }
     }
-    if( Options_dmp & IMPORT_DEF ) {
+    if( Options_dmp & IMPORT_TO_FMT ) {
       if( Import_format & IMPORTFMT_DEF ) {
           if( !Dmp_dll_exports_as_def() ) {
               Wdputslc( "No exports found\n" );
@@ -142,7 +142,7 @@ static void dmp_exe( void )
           Wdputslc( "Unsupported output format\n" );
       }
     }
-    if( Options_dmp & DEBUG_DEF ) {
+    if( Options_dmp & DEBUG_TO_FMT ) {
         if( !Dmp_mdbg_head_as_map() ) {
             Wdputslc( "No debugging information found\n" );
         }
@@ -415,7 +415,7 @@ static int parse_options( int argc, char * const *argv )
                 }
                 /* fall through */
             case 'x':
-                Options_dmp |= IMPORT_DEF;
+                Options_dmp |= IMPORT_TO_FMT;
                 Options_dmp |= QUIET;
                 Options_dmp &= ~EXE_INFO;
                 break;
@@ -427,7 +427,7 @@ static int parse_options( int argc, char * const *argv )
                 }
                 /* fall through */
             case 'n':
-                Options_dmp |= DEBUG_DEF;
+                Options_dmp |= DEBUG_TO_FMT;
                 Options_dmp |= QUIET;
                 Options_dmp &= ~EXE_INFO;
                 break;

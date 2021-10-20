@@ -79,8 +79,8 @@
 #define IMPORT_LIB      0x0100
 #define BINARY_DMP      0x0200
 #define PAGE_DMP        0x0400  /* dump the page maps       */
-#define IMPORT_DEF      0x0800  /* create DEF/MAP file from export table */
-#define DEBUG_DEF       0x1000  /* create DEF/MAP file from debug data */
+#define IMPORT_TO_FMT   0x0800  /* create DEF/MAP file from export table */
+#define DEBUG_TO_FMT    0x1000  /* create MAP file / .c+.h files from debug data */
 
 #define MODULE_INFO     0x01
 #define GLOBAL_INFO     0x02
@@ -153,10 +153,10 @@ enum {
     FORM_PL,
 };
 
-#define IMPORTFMT_DEF     0x01
-#define IMPORTFMT_MAP     0x02
-#define IMPORT_INCADDR    0x10
-#define IMPORT_INCORDN    0x20
+#define IMPORTFMT_DEF     0x01  /* Store extracted names in .def file */
+#define IMPORTFMT_MAP     0x02  /* Store extracted names in .map file */
+#define IMPORT_INCADDR    0x10  /* Include address in the output */
+#define IMPORT_INCORDN    0x20  /* Include ordinals which identify exports */
 
 #define DBGIMP_INCMODL    0x10
 #define DBGIMP_INCKIND    0x20

@@ -263,6 +263,7 @@ bool Dmp_mdbg_head_as_map( void )
         return( 1 );
     } else {
         // This case is not handled yet for .MAP dumping
+        Wdputs( "Unsupported format in Master Debug Header" );
     }
 }
 
