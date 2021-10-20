@@ -182,6 +182,18 @@ static void parse_master( master_dbg_header mdh )
 }
 
 /*
+ * Check whether the debug header is valid and supported.
+ */
+static bool master_dbg_head_supported( master_dbg_header *mdh )
+{
+    return ( mdh->signature == VALID_SIGNATURE &&
+        mdh->exe_major_ver == EXE_MAJOR_VERSION &&
+        (signed)mdh->exe_minor_ver <= EXE_MINOR_VERSION &&
+        mdh->obj_major_ver == OBJ_MAJOR_VERSION &&
+        mdh->obj_minor_ver <= OBJ_MINOR_VERSION );
+}
+
+/*
  * Dump the Debug Header, if any.
  */
 bool Dmp_mdbg_head( void )
@@ -196,11 +208,7 @@ bool Dmp_mdbg_head( void )
     Curr_sectoff = lseek( Handle, 0, SEEK_END );
     Wlseek( Curr_sectoff -(int)sizeof( master_dbg_header ) );
     Wread( &mdh, sizeof( master_dbg_header ) );
-    if( mdh.signature == VALID_SIGNATURE &&
-        mdh.exe_major_ver == EXE_MAJOR_VERSION &&
-        (signed)mdh.exe_minor_ver <= EXE_MINOR_VERSION &&
-        mdh.obj_major_ver == OBJ_MAJOR_VERSION &&
-        mdh.obj_minor_ver <= OBJ_MINOR_VERSION ) {
+    if( master_dbg_head_supported( &mdh ) ) {
         dmp_master( mdh );
         Dump_section();
         return( 1 );
@@ -253,11 +261,7 @@ bool Dmp_mdbg_head_as_map( void )
     Curr_sectoff = lseek( Handle, 0, SEEK_END );
     Wlseek( Curr_sectoff -(int)sizeof( master_dbg_header ) );
     Wread( &mdh, sizeof( master_dbg_header ) );
-    if( mdh.signature == VALID_SIGNATURE &&
-        mdh.exe_major_ver == EXE_MAJOR_VERSION &&
-        (signed)mdh.exe_minor_ver <= EXE_MINOR_VERSION &&
-        mdh.obj_major_ver == OBJ_MAJOR_VERSION &&
-        mdh.obj_minor_ver <= OBJ_MINOR_VERSION ) {
+    if( master_dbg_head_supported( &mdh ) ) {
         parse_master( mdh );
         Dump_section_as_map();
         return( 1 );
