@@ -721,6 +721,11 @@ bool Dmp_lib_head( void )
     return 1;
 }
 
+bool elf_head_valid( Elf32_Ehdr *elf_head )
+{
+  return ( memcmp( elf_head->e_ident, ELF_SIGNATURE, ELF_SIGNATURE_LEN ) == 0);
+}
+
 /*
  * Dump the ELF header, if any.
  */
@@ -728,7 +733,7 @@ bool Dmp_elf_header( unsigned_32 start )
 /**************************************/
 {
     Wread( &Elf_head, sizeof( Elf32_Ehdr ) );
-    if( memcmp( Elf_head.e_ident, ELF_SIGNATURE, ELF_SIGNATURE_LEN ) ) {
+    if( !elf_head_valid( &Elf_head ) ) {
         return( 0 );
     }
     Banner( "ELF Header" );
