@@ -300,10 +300,10 @@ static void dump_line_numbers( mod_info *mi )
         }
     }
 
-} /* dump_line_numbers */
+}
 
-/*
- * Get_type_index - get a type index
+/**
+ * Get an index of given type ptr.
  */
 unsigned_8 *Get_type_index( unsigned_8 *ptr, unsigned_16 *index )
 /***************************************************************/
@@ -321,10 +321,10 @@ unsigned_8 *Get_type_index( unsigned_8 *ptr, unsigned_16 *index )
         return( ptr + 1 );
     }
 
-} /* Get_type_index */
+}
 
-/*
- * Get_local_name - get a name from a local variable data structure
+/**
+ * Get a name from a local variable data structure.
  */
 void Get_local_name( char *name, unsigned_8 *data, unsigned_8 *start )
 /********************************************************************/
@@ -335,10 +335,10 @@ void Get_local_name( char *name, unsigned_8 *data, unsigned_8 *start )
     memcpy( name, data, len );
     name[len] = 0;
 
-} /* Get_local_name */
+}
 
-/*
- * dump_block - dump local block record
+/**
+ * Dump local block record in text form.
  */
 static void dump_block( unsigned_8 *buff, bool is32 )
 /***************************************************/
@@ -366,7 +366,7 @@ static void dump_block( unsigned_8 *buff, bool is32 )
         Wdputslc( "\n" );
     }
 
-} /* dump_block */
+}
 
 static char *regLocStrs[] =
 {
@@ -717,7 +717,7 @@ static void dump_rtn386( unsigned_8 *buff )
 } /* dump_rtn386 */
 
 /*
- * dump_locals - dump all local variable information
+ * Dump all local variable information in text form.
  */
 static void dump_locals( mod_info *mi )
 /*************************************/
@@ -931,7 +931,7 @@ static void dump_types( mod_info *mi )
 }
 
 /*
- * dump_module_info - dump module info
+ * Dump the module info block in text form.
  */
 static void dump_module_info( section_dbg_header *sdh )
 /*****************************************************/
@@ -996,7 +996,7 @@ static void dump_module_info( section_dbg_header *sdh )
         Wdputslc( "\n" );
         index++;
     }
-} /* dump_module_info */
+}
 
 /*
  * dump_global_info - Dump out global info block of debugging information.
@@ -1108,7 +1108,7 @@ static void dump_addr_info( section_dbg_header *sdh )
 } /* dump_addr_info */
 
 /*
- * dump_section - dump the current section
+ * Dump the current (at file position) section in text form.
  */
 void Dump_section( void )
 /***********************/
