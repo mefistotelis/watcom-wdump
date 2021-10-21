@@ -65,7 +65,8 @@ extern bool Dmp_qnx_head( void );
  * elfexe.c
  */
 extern bool Dmp_elf_head( void );
-extern bool Dmp_elf_header( unsigned long );
+extern bool Parse_elf_header( Elf32_Ehdr *elf_head, unsigned_32 start );
+extern void Dmp_elf_header( Elf32_Ehdr *elf_head, unsigned_32 start );
 extern bool Dmp_lib_head( void );
 
 /*

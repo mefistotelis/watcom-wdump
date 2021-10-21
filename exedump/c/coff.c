@@ -239,12 +239,12 @@ bool Dmp_ar_head( void )
             Dmp_seg_data( Coff_off, size );
         } else if( !Dmp_coff_head() ) {
             // then try and see if it's ELF
-            Wlseek( Coff_off );
-            if( !Dmp_elf_header( Coff_off ) ) {
+            if ( !Parse_elf_header( &Elf_head, Coff_off ) ) {
                 Wdputslc( "archive entry not identified\n" );
                 Dmp_seg_data( Coff_off, size );
                 Wdputslc( "\n" );
             }
+            Dmp_elf_header( &Elf_head, Coff_off );
         }
         if( size & 1 ) {
             size++;

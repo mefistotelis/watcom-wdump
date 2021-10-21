@@ -9,7 +9,7 @@ INCS =  -I"./watcom/h" -I"./dip/watcom/h" -I"./exedump/h" -I"./compat/h" -I"./li
 CXXINCS =
 RES  = 
 CXXFLAGS = $(CXXINCS)
-CFLAGS = -DDEBUG -g -c $(INCS)
+CFLAGS = -DDEBUG -g -c -Wno-attributes $(INCS)
 
 OBJ_WDUMP  = obj/wdmp.o obj/wdglb.o obj/dosexe.o obj/os2exe.o obj/peexe.o
 OBJ_WDUMP += obj/wdio.o obj/wdwarf.o obj/d16mexe.o obj/qnxexe.o obj/novexe.o obj/pharexe.o obj/elfexe.o

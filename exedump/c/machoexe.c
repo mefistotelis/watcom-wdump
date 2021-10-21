@@ -692,8 +692,8 @@ bool Dmp_machlib_head( void )
     if( memcmp( sig, LIBMAG, LIBMAG_LEN ) != 0 ) return 0;
     filesize = WFileSize();
     Elf_off = LIBMAG_LEN + LIB_CLASS_LEN + LIB_DATA_LEN;
-    Wlseek( Elf_off );
     for( ;; ) {
+        Wlseek( Elf_off );
         if( Elf_off + LIB_HEADER_SIZE >= filesize ) break;
         Wread( &hdr, LIB_HEADER_SIZE );
         Elf_off += LIB_HEADER_SIZE;
@@ -703,7 +703,7 @@ bool Dmp_machlib_head( void )
         Wdputslc( "\n" );
         hdr.lib_fmag[0] = '\0';
         size = strtoul( hdr.lib_size, NULL, 10 );
-        if( !Dmp_elf_header( Elf_off ) ) {
+        if ( !Parse_elf_header( &Elf_head, Elf_off ) ) {
             if( strcmp( hdr.lib_name, LIB_SYMTAB_NAME ) &&
                 strcmp( hdr.lib_name, LIB_LFTAB_NAME ) &&
                 strcmp( hdr.lib_name, LIB_FFTAB_NAME ) ) {
@@ -712,11 +712,11 @@ bool Dmp_machlib_head( void )
             Dmp_seg_data( Elf_off, size );
             Wdputslc( "\n" );
         }
+        Dmp_elf_header( &Elf_head, Elf_off );
         if( size & 1 ) {
             size++;
         }
         Elf_off += size;
-        Wlseek( Elf_off );
     }
     return 1;
 }

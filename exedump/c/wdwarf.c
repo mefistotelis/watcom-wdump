@@ -97,100 +97,143 @@ static void set_sects( void )
     }
 }
 
-
-static bool os2_debug( void )
-/***************************/
+/*
+ * Parse OS2 LE/LX executable header.
+ */
+static bool parse_os2_linear_exe_head( struct dos_exe_header *dos_head, struct os2_flat_header *os2_head )
+/*********************************************/
 {
+    unsigned_32 new_exe_off;
+    new_exe_off = 0;
     Wlseek( 0 );
-    Wread( &Dos_head, sizeof( Dos_head ) );
-    if( Dos_head.signature == DOS_SIGNATURE ) {
-        if( Dos_head.reloc_offset == OS2_EXE_HEADER_FOLLOWS ) {
+    Wread( dos_head, sizeof( struct dos_exe_header ) );
+    if( dos_head->signature == DOS_SIGNATURE ) {
+        if( dos_head->reloc_offset == OS2_EXE_HEADER_FOLLOWS ) {
             Wlseek( OS2_NE_OFFSET );
-            Wread( &New_exe_off, sizeof( New_exe_off ) );
-            Wlseek( New_exe_off );
+            Wread( &new_exe_off, sizeof( new_exe_off ) );
         }
     }
     // MZ stub is optional
-    Wread( &Os2_386_head, sizeof( Os2_386_head ) );
-    if( Os2_386_head.signature == OSF_FLAT_SIGNATURE ||
-        Os2_386_head.signature == OSF_FLAT_LX_SIGNATURE ) {
-        if( Os2_386_head.debug_len ) {
-            Wlseek( Os2_386_head.debug_off );
-            return( Dmp_elf_header( Os2_386_head.debug_off ) );
-        } else {
-            Wdputslc( "No OS/2 LE or LX debugging info\n" );
-        }
+    Wlseek( new_exe_off );
+    Wread( &os2_head, sizeof( struct os2_flat_header ) );
+    if( os2_head->signature == OSF_FLAT_SIGNATURE ||
+        os2_head->signature == OSF_FLAT_LX_SIGNATURE ) {
+        return ( TRUE );
     }
     return( FALSE );
 }
 
 /*
- * Dump the Master Debug Header, if any.
+ * Parse OS2 LE/LX executable header.
  */
-static void dmp_master( master_dbg_header mdh )
+static bool parse_os2_linear_exe_debug_head( void )
 /*********************************************/
 {
-    int                     i;
-
-    Banner( "Master Debug Info" );
-    Dump_header( (char *)&mdh.exe_major_ver, mdh_msg );
-    Wdputslc( "\n" );
-
-    Curr_sectoff -= (long)mdh.debug_size;
-    Wlseek( Curr_sectoff );
-    Lang_lst = Wmalloc( mdh.lang_size );
-    Wread( Lang_lst, mdh.lang_size );
-    Curr_sectoff += (long)mdh.lang_size;
-    i = 0;
-    Wdputslc( "Languages\n" );
-    Wdputslc( "=========\n" );
-    while( i < mdh.lang_size ) {
-        Wdputs( &Lang_lst[i] );
-        Wdputslc( "\n" );
-        i += strlen( &Lang_lst[i] ) + 1;
+    if( !parse_os2_linear_exe_head( &Dos_head, &Os2_386_head ) ) {
+        return( FALSE );
     }
-    Wdputslc( "\n" );
-
-    Wbuff = Wmalloc( MAX_BUFF );
-    Wread( Wbuff, mdh.segment_size );
-    Curr_sectoff += (long)mdh.segment_size;
-    Wdputslc( "Segments\n" );
-    Wdputslc( "========\n" );
-    i = 0;
-    while( i < mdh.segment_size ) {
-        Puthex( *(unsigned_16 *)&Wbuff[i], 4 );
-        Wdputslc( "\n" );
-        i += sizeof( unsigned_16);
+    if( Os2_386_head.debug_len == 0 ) {
+        return( FALSE );
     }
-    Wdputslc( "\n" );
+    if ( !Parse_elf_header( &Elf_head, Os2_386_head.debug_off ) ) {
+        return( FALSE );
+    }
+    return( TRUE );
+}
+
+static bool dump_os2_debug( void )
+/***************************/
+{
+    if( Os2_386_head.debug_len ) {
+        Dmp_elf_header( &Elf_head, Os2_386_head.debug_off );
+        return( TRUE );
+    } else {
+        Wdputslc( "No OS/2 LE or LX debugging info\n" );
+    }
+    return( FALSE );
 }
 
 /*
- * Skip dumping the Master Debug Header.
+ * Check whether the debug header is valid.
  */
-static void parse_master( master_dbg_header mdh )
-/*********************************************/
+static bool is_valid_master_dbg_head( master_dbg_header *mdh )
 {
-    Curr_sectoff -= (long)mdh.debug_size;
-    Wlseek( Curr_sectoff );
-    Lang_lst = Wmalloc( mdh.lang_size );
-    Wread( Lang_lst, mdh.lang_size );
-    Curr_sectoff += (long)mdh.lang_size;
-    Wbuff = Wmalloc( MAX_BUFF );
-    Wread( Wbuff, mdh.segment_size );
-    Curr_sectoff += (long)mdh.segment_size;
+    return ( mdh->signature == VALID_SIGNATURE );
 }
 
 /*
  * Check whether the debug header is valid and supported.
  */
-static bool master_dbg_head_supported( master_dbg_header *mdh )
+static bool is_supported_master_dbg_head( master_dbg_header *mdh )
 {
     return ( mdh->signature == VALID_SIGNATURE &&
         mdh->exe_major_ver == EXE_MAJOR_VERSION &&
         (signed)mdh->exe_minor_ver <= EXE_MINOR_VERSION &&
         mdh->obj_major_ver == OBJ_MAJOR_VERSION &&
         mdh->obj_minor_ver <= OBJ_MINOR_VERSION );
+}
+
+/*
+ * Parse dynamic lists within the Master Debug Header.
+ */
+static bool parse_master_dbg_header( master_dbg_header *mdh )
+/*********************************************/
+{
+    Curr_sectoff = lseek( Handle, 0, SEEK_END );
+    Wlseek( Curr_sectoff -(int)sizeof( master_dbg_header ) );
+    Wread( mdh, sizeof( master_dbg_header ) );
+
+    if( !is_valid_master_dbg_head( mdh ) )
+        return( FALSE );
+
+    if( !is_supported_master_dbg_head( mdh ) )
+        Wdputslc( "Unsupported version in Master Debug Header; continuing anyway\n" );
+
+    Curr_sectoff -= (long)mdh->debug_size;
+    Wlseek( Curr_sectoff );
+
+    Lang_lst = Wmalloc( mdh->lang_size );
+    Wread( Lang_lst, mdh->lang_size );
+    Curr_sectoff += (long)mdh->lang_size;
+
+    Wbuff = Wmalloc( MAX_BUFF );
+    Wread( Wbuff, mdh->segment_size );
+    Curr_sectoff += (long)mdh->segment_size;
+
+    return( TRUE );
+}
+
+/*
+ * Dump the Master Debug Header, with dynamic lists.
+ */
+static void dmp_master_dbg( master_dbg_header *mdh )
+/*********************************************/
+{
+    int                     i;
+
+    Banner( "Master Debug Info" );
+    Dump_header( (char *)&mdh->exe_major_ver, mdh_msg );
+    Wdputslc( "\n" );
+
+    i = 0;
+    Wdputslc( "Languages\n" );
+    Wdputslc( "=========\n" );
+    while( i < mdh->lang_size ) {
+        Wdputs( &Lang_lst[i] );
+        Wdputslc( "\n" );
+        i += strlen( &Lang_lst[i] ) + 1;
+    }
+    Wdputslc( "\n" );
+
+    Wdputslc( "Segments\n" );
+    Wdputslc( "========\n" );
+    i = 0;
+    while( i < mdh->segment_size ) {
+        Puthex( *(unsigned_16 *)&Wbuff[i], 4 );
+        Wdputslc( "\n" );
+        i += sizeof( unsigned_16 );
+    }
+    Wdputslc( "\n" );
 }
 
 /*
@@ -205,39 +248,44 @@ bool Dmp_mdbg_head( void )
     master_dbg_header   mdh;
 
     cnt = 0;
-    Curr_sectoff = lseek( Handle, 0, SEEK_END );
-    Wlseek( Curr_sectoff -(int)sizeof( master_dbg_header ) );
-    Wread( &mdh, sizeof( master_dbg_header ) );
-    if( master_dbg_head_supported( &mdh ) ) {
-        dmp_master( mdh );
+    if( parse_master_dbg_header( &mdh ) ) {
+        dmp_master_dbg( &mdh );
         Dump_section();
         return( 1 );
-    } else {
-        Wlseek( 0 );
-        // Handle ELF and NE/LX executables without TIS signature
-        if( Dmp_elf_header( 0 ) || os2_debug() ) {
-            return( 1 );    // Don't dump debug data twice
-        }
+    }
+    if( Parse_elf_header( &Elf_head, 0 ) ) {
+        // Handle ELF executables without TIS signature
+        Dmp_elf_header( &Elf_head, 0 );
+        return( 1 );
+    }
+    if( parse_os2_linear_exe_debug_head() ) {
+        // Handle NE/LX executables without TIS signature
+        dump_os2_debug( );
+        return( 1 );
+    }
+    {
         while( 1 ) {
             Wlseek( Curr_sectoff -(int)sizeof( debug_header ) );
             Wread( &dbg, sizeof( debug_header ) );
-            if( memcmp( dbg.signature, signature, 4 ) != 0 ) {
-                if( cnt ) {
-                    return( 1 );
-                } else {
-                    return( 0 );
-                }
-            }
+            if( memcmp( dbg.signature, signature, 4 ) != 0 )
+                break;
             cnt++;
             Wdputs( "size of information = " );
             Puthex( dbg.info_size, 4 );
             Wdputslc( "\n" );
             Curr_sectoff -= dbg.info_size;
             Wlseek( Curr_sectoff );
-            if( !Dmp_elf_header( Curr_sectoff ) ) {
+            if( Parse_elf_header( &Elf_head, Curr_sectoff ) ) {
+                Dmp_elf_header( &Elf_head, Curr_sectoff );
+            } else {
                 Banner( "Data" );
                 Dmp_seg_data( Curr_sectoff, dbg.info_size - sizeof( debug_header ) );
             }
+        }
+        if( cnt ) {
+            return( 1 );
+        } else {
+            return( 0 );
         }
     }
 }
@@ -258,11 +306,7 @@ bool Dmp_mdbg_head_as_map( void )
     Wdputslc( "'\n" );
 
     cnt = 0;
-    Curr_sectoff = lseek( Handle, 0, SEEK_END );
-    Wlseek( Curr_sectoff -(int)sizeof( master_dbg_header ) );
-    Wread( &mdh, sizeof( master_dbg_header ) );
-    if( master_dbg_head_supported( &mdh ) ) {
-        parse_master( mdh );
+    if( parse_master_dbg_header( &mdh ) ) {
         Dump_section_as_map();
         return( 1 );
     } else {

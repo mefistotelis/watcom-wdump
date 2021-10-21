@@ -692,8 +692,8 @@ bool Dmp_lib_head( void )
     if( memcmp( sig, LIBMAG, LIBMAG_LEN ) != 0 ) return 0;
     filesize = WFileSize();
     Elf_off = LIBMAG_LEN + LIB_CLASS_LEN + LIB_DATA_LEN;
-    Wlseek( Elf_off );
     for( ;; ) {
+        Wlseek( Elf_off );
         if( Elf_off + LIB_HEADER_SIZE >= filesize ) break;
         Wread( &hdr, LIB_HEADER_SIZE );
         Elf_off += LIB_HEADER_SIZE;
@@ -703,7 +703,7 @@ bool Dmp_lib_head( void )
         Wdputslc( "\n" );
         hdr.lib_fmag[0] = '\0';
         size = strtoul( hdr.lib_size, NULL, 10 );
-        if( !Dmp_elf_header( Elf_off ) ) {
+        if ( !Parse_elf_header( &Elf_head, Elf_off ) ) {
             if( strcmp( hdr.lib_name, LIB_SYMTAB_NAME ) &&
                 strcmp( hdr.lib_name, LIB_LFTAB_NAME ) &&
                 strcmp( hdr.lib_name, LIB_FFTAB_NAME ) ) {
@@ -712,11 +712,11 @@ bool Dmp_lib_head( void )
             Dmp_seg_data( Elf_off, size );
             Wdputslc( "\n" );
         }
+        Dmp_elf_header( &Elf_head, Elf_off );
         if( size & 1 ) {
             size++;
         }
         Elf_off += size;
-        Wlseek( Elf_off );
     }
     return 1;
 }
@@ -729,13 +729,41 @@ bool elf_head_valid( Elf32_Ehdr *elf_head )
 /*
  * Dump the ELF header, if any.
  */
-bool Dmp_elf_header( unsigned_32 start )
+bool Parse_elf_header( Elf32_Ehdr *elf_head, unsigned_32 start )
 /**************************************/
 {
-    Wread( &Elf_head, sizeof( Elf32_Ehdr ) );
-    if( !elf_head_valid( &Elf_head ) ) {
-        return( 0 );
+    Wlseek( start );
+    Wread( elf_head, sizeof( Elf32_Ehdr ) );
+    if( !elf_head_valid( elf_head ) ) {
+        return( FALSE );
     }
+    if( elf_head->e_ident[EI_DATA] != NATIVE_ENDIAN ) {
+        Byte_swap = TRUE;
+
+        /* Byte swap ELF header */
+        SWAP_16( elf_head->e_type );
+        SWAP_16( elf_head->e_machine );
+        SWAP_32( elf_head->e_version );
+        SWAP_32( elf_head->e_entry );
+        SWAP_32( elf_head->e_phoff );
+        SWAP_32( elf_head->e_shoff );
+        SWAP_32( elf_head->e_flags );
+        SWAP_16( elf_head->e_ehsize );
+        SWAP_16( elf_head->e_phentsize );
+        SWAP_16( elf_head->e_phnum );
+        SWAP_16( elf_head->e_shentsize );
+        SWAP_16( elf_head->e_shnum );
+        SWAP_16( elf_head->e_shstrndx );
+    }
+    return( TRUE );
+}
+
+/*
+ * Dump the ELF header, if any.
+ */
+void Dmp_elf_header( Elf32_Ehdr *elf_head, unsigned_32 start )
+/**************************************/
+{
     Banner( "ELF Header" );
     if( start != 0 ) {
         Wdputs( "File Offset:" );
@@ -743,39 +771,21 @@ bool Dmp_elf_header( unsigned_32 start )
         Wdputslc( "\n" );
     }
     Wdputs( "class (1==32-bit objects, 2==64-bit objs)   =       " );
-    Puthex( Elf_head.e_ident[EI_CLASS], 2 );
+    Puthex( elf_head->e_ident[EI_CLASS], 2 );
     Wdputslc( "H\ndata  (1==little-endian, 2==big-endian)     =       " );
-    Puthex( Elf_head.e_ident[EI_DATA], 2 );
+    Puthex( elf_head->e_ident[EI_DATA], 2 );
     Wdputslc( "H\nversion                                     =       " );
-    Puthex( Elf_head.e_ident[EI_VERSION], 2 );
+    Puthex( elf_head->e_ident[EI_VERSION], 2 );
     Wdputslc( "H\nOS/ABI type (0==unspecified)                =       " );
-    Puthex( Elf_head.e_ident[EI_OSABI], 2 );
+    Puthex( elf_head->e_ident[EI_OSABI], 2 );
     Wdputslc( "H\nABI version (0==unspecified)                =       " );
-    Puthex( Elf_head.e_ident[EI_ABIVERSION], 2 );
+    Puthex( elf_head->e_ident[EI_ABIVERSION], 2 );
     Wdputslc( "H\n" );
-    if( Elf_head.e_ident[EI_DATA] != NATIVE_ENDIAN ) {
-        Byte_swap = TRUE;
 
-        /* Byte swap ELF header */
-        SWAP_16( Elf_head.e_type );
-        SWAP_16( Elf_head.e_machine );
-        SWAP_32( Elf_head.e_version );
-        SWAP_32( Elf_head.e_entry );
-        SWAP_32( Elf_head.e_phoff );
-        SWAP_32( Elf_head.e_shoff );
-        SWAP_32( Elf_head.e_flags );
-        SWAP_16( Elf_head.e_ehsize );
-        SWAP_16( Elf_head.e_phentsize );
-        SWAP_16( Elf_head.e_phnum );
-        SWAP_16( Elf_head.e_shentsize );
-        SWAP_16( Elf_head.e_shnum );
-        SWAP_16( Elf_head.e_shstrndx );
-    }
-    dmp_hdr_type( Elf_head.e_type );
-    Dump_header( &Elf_head.e_type, elf_exe_msg );
+    dmp_hdr_type( elf_head->e_type );
+    Dump_header( &elf_head->e_type, elf_exe_msg );
     Wdputslc( "\n" );
     dmp_prog_sec( start );
-    return( 1 );
 }
 
 
@@ -785,6 +795,8 @@ bool Dmp_elf_header( unsigned_32 start )
 bool Dmp_elf_head( void )
 /***********************/
 {
-    Wlseek( 0 );
-    return( Dmp_elf_header( 0 ) );
+    if ( !Parse_elf_header( &Elf_head, 0 ) )
+        return( FALSE );
+    Dmp_elf_header( &Elf_head, 0 );
+    return( TRUE );
 }
