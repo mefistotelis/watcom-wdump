@@ -229,8 +229,50 @@ bool dmp_debug_names_as_map( void )
     return ( 1 );
 }
 
-/*
- * dump_line_numbers - dump line number info
+/**
+ * Parse one entry of line number info.
+ */
+static unsigned_32 parse_line_number_segment( int index, unsigned_32 offs, v3_line_segment *li )
+/*******************************************/
+{
+    unsigned_16 size;
+    char *buff = (char *)li;
+    Wread( buff, sizeof( v3_line_segment ) );
+
+    size = (li->num-1)* sizeof( line_info );
+    Wread( buff + sizeof( v3_line_segment ), size );
+
+    return sizeof( v3_line_segment ) + size;
+}
+
+/**
+ * Dump one entry of line number info.
+ */
+static void dump_line_number_segment( int index, unsigned_32 offs, const v3_line_segment *li )
+/*******************************************/
+{
+    int j;
+    Wdputslc( "      -------------------------------------\n" );
+    Wdputs( "      Data " );
+    Putdec( index );
+    Wdputs( ": offset " );
+    Puthex( offs, 8 );
+    Wdputs( "H, addr info off = " );
+    Puthex( li->segment, 8 );
+    Wdputs( "H, num = " );
+    Putdec( li->num );
+    Wdputslc( "\n" );
+    for( j = 0; j < li->num; j++ ) {
+        Wdputs( "        number =" );
+        Putdecl( li->line[j].line_number, 5 );
+        Wdputs( ",  code offset = " );
+        Puthex( li->line[j].code_offset, 8 );
+        Wdputslc( "H\n" );
+    }
+}
+
+/**
+ * Dump line number info.
  */
 static void dump_line_numbers( mod_info *mi )
 /*******************************************/
@@ -257,6 +299,7 @@ static void dump_line_numbers( mod_info *mi )
     }
     Wlseek( Curr_sectoff + mi->di[DMND_LINES].info_off );
     Wread( offs, (cnt+1) * sizeof( unsigned_32 ) );
+
     Wdputs( "      " );
     Putdec( cnt );
     Wdputslc( " offset entries:\n" );
@@ -267,36 +310,18 @@ static void dump_line_numbers( mod_info *mi )
         Puthex( offs[i], 8 );
         Wdputslc( "H\n" );
     }
+
     for( i = 0; i < cnt; i++ ) {
         Wlseek( Curr_sectoff + offs[i] );
-        Wread( Wbuff, sizeof( v3_line_segment ) );
         li = (v3_line_segment *) Wbuff;
         coff = 0;
         while( 1 ) {
-            size = (li->num-1)* sizeof( line_info );
-            Wread( Wbuff + sizeof( v3_line_segment ), size );
-            Wdputslc( "      -------------------------------------\n" );
-            Wdputs( "      Data " );
-            Putdec( i );
-            Wdputs( ": offset " );
-            Puthex( offs[i], 8 );
-            Wdputs( "H, addr info off = " );
-            Puthex( li->segment, 8 );
-            Wdputs( "H, num = " );
-            Putdec( li->num );
-            Wdputslc( "\n" );
-            for( j = 0; j < li->num; j++ ) {
-                Wdputs( "        number =" );
-                Putdecl( li->line[j].line_number, 5 );
-                Wdputs( ",  code offset = " );
-                Puthex( li->line[j].code_offset, 8 );
-                Wdputslc( "H\n" );
-            }
-            coff += sizeof( v3_line_segment ) + size;
+            size = parse_line_number_segment( i, offs[i], li );
+            dump_line_number_segment( i, offs[i], li );
+            coff += size;
             if( coff >= (offs[i+1] - offs[i]) ) {
                 break;
             }
-            Wread( Wbuff, sizeof( v3_line_segment ) );
         }
     }
 
@@ -1116,6 +1141,8 @@ void Dump_section( void )
     section_dbg_header  sdh;
 
     Wread( &sdh, sizeof( section_dbg_header ) );
+    currSect = sdh.section_id;
+
     Wdputs( "Section " );
     Putdec( sdh.section_id );
     Wdputs( " (off=" );
@@ -1124,7 +1151,6 @@ void Dump_section( void )
     Wdputslc( "=========================\n" );
     Dump_header( (char *)&sdh.mod_offset, sdh_msg );
     Wdputslc( "\n" );
-    currSect = sdh.section_id;
 
     if( Debug_options & MODULE_INFO ) {
         dump_module_info( &sdh );
