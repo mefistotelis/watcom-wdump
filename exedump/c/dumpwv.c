@@ -246,6 +246,25 @@ static unsigned_32 parse_line_number_segment( int index, unsigned_32 offs, v3_li
 }
 
 /**
+ * Dump offsets from array in text form.
+ */
+static void dump_offset_list( unsigned_32 *offs, int cnt )
+/*******************************************/
+{
+    int i;
+    Wdputs( "      " );
+    Putdec( cnt );
+    Wdputslc( " offset entries:\n" );
+    for( i = 0; i <= cnt; i++ ) {
+        Wdputs( "        offset " );
+        Putdec( i );
+        Wdputs( " = " );
+        Puthex( offs[i], 8 );
+        Wdputslc( "H\n" );
+    }
+}
+
+/**
  * Dump one entry of line number info.
  */
 static void dump_line_number_segment( int index, unsigned_32 offs, const v3_line_segment *li )
@@ -300,16 +319,7 @@ static void dump_line_numbers( mod_info *mi )
     Wlseek( Curr_sectoff + mi->di[DMND_LINES].info_off );
     Wread( offs, (cnt+1) * sizeof( unsigned_32 ) );
 
-    Wdputs( "      " );
-    Putdec( cnt );
-    Wdputslc( " offset entries:\n" );
-    for( i = 0; i <= cnt; i++ ) {
-        Wdputs( "        offset " );
-        Putdec( i );
-        Wdputs( " = " );
-        Puthex( offs[i], 8 );
-        Wdputslc( "H\n" );
-    }
+    dump_offset_list( offs, cnt );
 
     for( i = 0; i < cnt; i++ ) {
         Wlseek( Curr_sectoff + offs[i] );
