@@ -135,13 +135,13 @@ static bool parse_os2_linear_exe_debug_head( void )
     if( Os2_386_head.debug_len == 0 ) {
         return( FALSE );
     }
-    if ( !Parse_elf_header( &Elf_head, Os2_386_head.debug_off ) ) {
+    if( !Parse_elf_header( &Elf_head, Os2_386_head.debug_off ) ) {
         return( FALSE );
     }
     return( TRUE );
 }
 
-static bool dump_os2_debug( void )
+static bool dump_os2_linear_exe_debug_head( void )
 /***************************/
 {
     if( Os2_386_head.debug_len ) {
@@ -237,17 +237,29 @@ static void dmp_master_dbg( master_dbg_header *mdh )
 }
 
 /*
+ * Parse TIS Debug Header.
+ */
+static bool parse_tis_dbg_header( debug_header *dbg, unsigned_32 offs )
+/*********************************************/
+{
+    const char *signature = "TIS";
+    Wlseek( offs );
+    Wread( dbg, sizeof( debug_header ) );
+    if( memcmp( dbg->signature, signature, 4 ) != 0 )
+        return( FALSE );
+    return( TRUE );
+}
+
+/*
  * Dump the Debug Header, if any.
  */
 bool Dmp_mdbg_head( void )
 /************************/
 {
     debug_header        dbg;
-    char                *signature = "TIS";
     unsigned_16         cnt;
     master_dbg_header   mdh;
 
-    cnt = 0;
     if( parse_master_dbg_header( &mdh ) ) {
         dmp_master_dbg( &mdh );
         Dump_section();
@@ -258,23 +270,21 @@ bool Dmp_mdbg_head( void )
         Dmp_elf_header( &Elf_head, 0 );
         return( 1 );
     }
-    if( parse_os2_linear_exe_debug_head() ) {
+    if( parse_os2_linear_exe_debug_head( ) ) {
         // Handle NE/LX executables without TIS signature
-        dump_os2_debug( );
+        dump_os2_linear_exe_debug_head( );
         return( 1 );
     }
-    {
-        while( 1 ) {
-            Wlseek( Curr_sectoff -(int)sizeof( debug_header ) );
-            Wread( &dbg, sizeof( debug_header ) );
-            if( memcmp( dbg.signature, signature, 4 ) != 0 )
-                break;
+    { // Handle executables with TIS signature
+        cnt = 0;
+        while( parse_tis_dbg_header( &dbg, Curr_sectoff -(int)sizeof( debug_header ) ) ) {
             cnt++;
             Wdputs( "size of information = " );
             Puthex( dbg.info_size, 4 );
             Wdputslc( "\n" );
+
             Curr_sectoff -= dbg.info_size;
-            Wlseek( Curr_sectoff );
+
             if( Parse_elf_header( &Elf_head, Curr_sectoff ) ) {
                 Dmp_elf_header( &Elf_head, Curr_sectoff );
             } else {
@@ -282,12 +292,10 @@ bool Dmp_mdbg_head( void )
                 Dmp_seg_data( Curr_sectoff, dbg.info_size - sizeof( debug_header ) );
             }
         }
-        if( cnt ) {
+        if( cnt > 0 )
             return( 1 );
-        } else {
-            return( 0 );
-        }
     }
+    return( 0 );
 }
 
 /*
@@ -296,16 +304,12 @@ bool Dmp_mdbg_head( void )
 bool Dmp_mdbg_head_as_map( void )
 /************************/
 {
-    debug_header        dbg;
-    char                *signature = "TIS";
-    unsigned_16         cnt;
     master_dbg_header   mdh;
 
     Wdputs( "MAP file for module '" );
     Wdputs( Fname );
     Wdputslc( "'\n" );
 
-    cnt = 0;
     if( parse_master_dbg_header( &mdh ) ) {
         Dump_section_as_map();
         return( 1 );
