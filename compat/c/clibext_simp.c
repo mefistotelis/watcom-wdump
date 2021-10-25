@@ -60,6 +60,11 @@
 
 #define __set_errno( err ) errno = (err)
 
+#define _FFAR
+_WCRTLINK size_t _mbsnccnt( const unsigned char _FFAR *string, size_t n );
+_WCRTLINK size_t _mbsnbcnt( const unsigned char _FFAR *string, size_t n );
+_WCRTLINK unsigned char _FFAR *_mbsncpy( unsigned char _FFAR *s1, const unsigned char _FFAR *s2, size_t n );
+
 char **_argv;
 int  _argc;
 

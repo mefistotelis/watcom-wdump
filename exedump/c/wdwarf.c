@@ -115,7 +115,7 @@ static bool parse_os2_linear_exe_head( struct dos_exe_header *dos_head, struct o
     }
     // MZ stub is optional
     Wlseek( new_exe_off );
-    Wread( &os2_head, sizeof( struct os2_flat_header ) );
+    Wread( os2_head, sizeof( struct os2_flat_header ) );
     if( os2_head->signature == OSF_FLAT_SIGNATURE ||
         os2_head->signature == OSF_FLAT_LX_SIGNATURE ) {
         return ( TRUE );

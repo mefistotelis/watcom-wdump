@@ -119,7 +119,9 @@ static void dmp_exe( void )
             /* done */
         } else if( Dmp_hll_head() ) {
             /* done */
-        } else if( !Dmp_mdbg_head() ) {
+        } else if( Dmp_mdbg_head() ) {
+            /* done */
+        } else {
             Wdputslc( "No debugging information found\n" );
         }
     }

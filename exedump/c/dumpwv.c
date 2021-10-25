@@ -130,23 +130,24 @@ static void get_len_prefix_string( char *res, char *str )
 void get_mangled_symbol_base( char *base, const char *name )
 /**********************/
 {
-    char *cptr;
-    cptr = strrchr(name,'?');
-    if (cptr == NULL) {
-        cptr = name;
-        while (cptr[0] == '_') cptr++;
+    const char *naptr;
+    char *baptr;
+    naptr = strrchr(name,'?');
+    if (naptr == NULL) {
+        naptr = name;
+        while (naptr[0] == '_') naptr++;
     } else {
-        cptr++;
-        while ((cptr[0] == '$') || (cptr[0] == '.')) cptr++;
+        naptr++;
+        while ((naptr[0] == '$') || (naptr[0] == '.')) naptr++;
     }
-    if (cptr[0] == '\0') cptr = name;
-    strcpy(base, cptr);
-    cptr = strchr(base,'$');
-    if (cptr != NULL) cptr[0] = '\0';
-    cptr = base + strlen(base) - 1;
-    while ((cptr>base+1) && (cptr[0]=='_')) {
-        cptr[0] = '\0';
-        cptr--;
+    if (naptr[0] == '\0') naptr = name;
+    strcpy(base, naptr);
+    baptr = strchr(base,'$');
+    if (baptr != NULL) baptr[0] = '\0';
+    baptr = base + strlen(base) - 1;
+    while ((baptr>base+1) && (baptr[0]=='_')) {
+        baptr[0] = '\0';
+        baptr--;
     }
 }
 
@@ -446,7 +447,13 @@ static char *regLocStrs[] =
 };
 
 /*
- * dump_single_location_entry - dump a single location expression entry
+ * Dump a single location expression entry.
+ *
+ * Formats:
+ *   IDENT
+ *   IDENT( PLACE )
+ *   IDENT: PLACE
+ *   IDENT( PLACE ): PLACE
  */
 unsigned_8 *dump_single_location_entry( unsigned_8 *buff )
 /********************************************************/

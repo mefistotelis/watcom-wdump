@@ -43,6 +43,9 @@ extern bool Dmp_pe_head( void );
 extern void dmp_objects( void );
 extern void DumpCoffHdrFlags( unsigned_16 );
 extern bool Dmp_pe_tab( void );
+unsigned_32 get_pe_section_offset( unsigned_16 section );
+unsigned_32 get_section_idx_for_rva( unsigned_32 rva );
+bool parse_pe_sections( void );
 bool parse_pe_sections_table( unsigned_32 offset, unsigned_32 num_objects );
 void free_sections_table( void );
 
