@@ -478,13 +478,13 @@ unsigned_8 *dump_single_location_entry( unsigned_8 *buff )
         break;
     case BP_OFFSET_WORD:
         Wdputs( "BP_OFFSET_WORD( " );
-        Puthex( *buff, 4 );
+        Puthex( get_u16(buff), 4 );
         Wdputslc( " )\n" );
         buff += sizeof( unsigned_16 );
         break;
     case BP_OFFSET_DWORD:
         Wdputs( "BP_OFFSET_DWORD( " );
-        Puthex( *buff, 8 );
+        Puthex( get_u32(buff), 8 );
         Wdputslc( " )\n" );
         buff += sizeof( unsigned_32 );
         break;
@@ -514,13 +514,13 @@ unsigned_8 *dump_single_location_entry( unsigned_8 *buff )
         break;
     case CONST_INT_2:
         Wdputs( "CONST_INT_2( " );
-        Puthex( *buff, 4 );
+        Puthex( get_u16(buff), 4 );
         Wdputslc( " )\n" );
         buff += sizeof( unsigned_16 );
         break;
     case CONST_INT_4:
         Wdputs( "CONST_INT_4( " );
-        Puthex( *buff, 8 );
+        Puthex( get_u32(buff), 8 );
         Wdputslc( " )\n" );
         buff += sizeof( unsigned_32 );
         break;
@@ -895,7 +895,7 @@ static void dump_locals( mod_info *mi )
                 index = 5;
                 ptr = buff+2;
                 Wdputs( "          parent offset = " );
-                Puthex( *ptr, 4 );
+                Puthex( get_u16(ptr), 4 );
                 ptr += 2;
                 if( *ptr & 0x80 ) {
                     index = 6;
@@ -914,7 +914,7 @@ static void dump_locals( mod_info *mi )
             case ADD_PREV_SEG:
                 Wdputslc( "ADD_PREV_SEG\n" );
                 Wdputs( "          segment increment = " );
-                Puthex( *(buff+2), 4 );
+                Puthex( get_u16(buff+2), 4 );
                 Wdputslc( "\n" );
                 break;
             case SET_BASE:

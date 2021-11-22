@@ -176,7 +176,7 @@ static void array_index( unsigned_8 *ptr, unsigned_8 size )
 /*********************************************************/
 {
     Wdputs( "          high bound = " );
-    Puthex( *ptr, 2*size );
+    Puthex( get_u(ptr,size), 2*size );
     base_type_index( ptr+size );
 }
 
@@ -200,7 +200,7 @@ static void bit_field_struct( unsigned_8 *buff, unsigned_8 size, bool bit )
     Wdputs( name );
     Wdputs( "\"  offset = " );
     ptr = buff+2;
-    Puthex( *ptr, 2*size );
+    Puthex( get_u(ptr,size), 2*size );
     Wdputs( "  type idx = " );
     Putdec( index );
     if( bit ) {
@@ -256,10 +256,10 @@ static void range( unsigned_8 *ptr, unsigned_8 size )
 /***************************************************/
 {
     Wdputs( "          low bound = " );
-    Puthex( *ptr, 2*size );
+    Puthex( get_u(ptr,size), 2*size );
     Wdputs( "   high bound = " );
     ptr += size;
-    Puthex( *ptr, 2*size );
+    Puthex( get_u(ptr,size), 2*size );
     ptr += size;
     base_type_index( ptr );
 }
@@ -276,7 +276,7 @@ static void enum_const( unsigned_8 *buff, unsigned_8 size )
     Wdputs( "          \"" );
     Wdputs( name );
     Wdputs( "\"   value = " );
-    Puthex( *(buff+2), 2*size );
+    Puthex( get_u(buff+2,size), 2*size );
     Wdputslc( "\n" );
 }
 
@@ -383,7 +383,7 @@ void Dmp_type( int cnt, unsigned_32 *offs )
                 break;
             case CUE_TABLE:
                 Wdputs( "cue table offset=" );
-                Puthex( *(unsigned_32 *)ptr, 8 );
+                Puthex( get_u32(ptr), 8 );
                 Wdputslc( "\n" );
                 break;
             case TYPE_EOF:
@@ -480,7 +480,7 @@ void Dmp_type( int cnt, unsigned_32 *offs )
             case CLIST:
                 StartType( "ENUM_LIST", ++curr_index);
                 Wdputs( "          number of consts = " );
-                Puthex( *ptr, 4 );
+                Puthex( get_u16(ptr), 4 );
                 Wdputs( "   scalar type = " );
                 scalar_type( buff[4] );
                 Wdputslc( "\n" );
@@ -500,11 +500,11 @@ void Dmp_type( int cnt, unsigned_32 *offs )
             case FLIST:
                 StartType( "FIELD_LIST", ++curr_index);
                 Wdputs( "          number of fields = " );
-                Puthex( *ptr, 4 );
+                Puthex( get_u16(ptr), 4 );
                 if( buff[0] > 4 ) {
                     Wdputs( "   size = " );
                     ptr += 2;
-                    Puthex( *ptr, 8 );
+                    Puthex( get_u32(ptr), 8 );
                 }
                 Wdputslc( "\n" );
                 break;
@@ -578,13 +578,13 @@ void Dmp_type( int cnt, unsigned_32 *offs )
             case CHAR_WORD:
                 StartType( "CHAR_WORD", ++curr_index);
                 Wdputs( "        length = " );
-                Puthex( *ptr, 4 );
+                Puthex( get_u16(ptr), 4 );
                 Wdputslc( "\n" );
                 break;
             case CHAR_LONG:
                 StartType( "CHAR_LONG", ++curr_index);
                 Wdputs( "        length = " );
-                Puthex( *ptr, 8 );
+                Puthex( get_u32(ptr), 8 );
                 Wdputslc( "\n" );
                 break;
             case CHAR_IND:

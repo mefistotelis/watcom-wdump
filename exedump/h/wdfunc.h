@@ -170,6 +170,8 @@ extern uint_32 get_u32( uint_32 *src );
 extern int_32  get_s32( int_32 *src );
 extern uint_16 get_u16( uint_16 *src );
 extern int_16  get_s16( int_16 *src );
+extern uint_32 get_u( unsigned_8 *src, unsigned_16 size);
+extern int_32 get_s( signed_8 *src, unsigned_16 size);
 
 /*
  * dosexe.c

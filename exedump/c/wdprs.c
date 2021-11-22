@@ -161,3 +161,34 @@ int_16 get_s16( int_16 *src )
         return( *src );
     }
 }
+
+uint_32 get_u( unsigned_8 *src, unsigned_16 size)
+/*****************************/
+{
+    switch(size) {
+    case 1:
+        return *src;
+    case 2:
+        return get_u16(src);
+    case 4:
+        return get_u32(src);
+    default:
+        return -1;
+    }
+}
+
+int_32 get_s( signed_8 *src, unsigned_16 size)
+/***************************/
+{
+    switch(size) {
+    case 1:
+        return *src;
+    case 2:
+        return get_s16(src);
+    case 4:
+        return get_s32(src);
+    default:
+        return -1;
+    }
+}
+
