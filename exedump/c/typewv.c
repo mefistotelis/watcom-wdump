@@ -221,6 +221,7 @@ static void bit_field_class( unsigned_8 *buff, bool bit )
 /*******************************************************/
 {
     unsigned_8  *ptr;
+    unsigned_8  *bitptr;
     unsigned_16 index;
     char        name[256];
 
@@ -228,6 +229,7 @@ static void bit_field_class( unsigned_8 *buff, bool bit )
     Wdputs( "          field locator = " );
     ptr = Dump_location_expression( ptr, "            " );
     if( bit ) {
+        bitptr = ptr;
         ptr += 2;
     }
     ptr = Get_type_index( ptr, &index );
@@ -240,11 +242,10 @@ static void bit_field_class( unsigned_8 *buff, bool bit )
     attribute_byte( buff[2] );
     if( bit ) {
         Wdputslc( "  start bit = " );
-        ptr++;
-        Puthex( *ptr, 2 );
+        Puthex( *bitptr, 2 );
+        bitptr++;
         Wdputslc( "  bit size = " );
-        ptr++;
-        Puthex( *ptr, 2 );
+        Puthex( *bitptr, 2 );
     }
     Wdputslc( "\n" );
 }
